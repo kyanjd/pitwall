@@ -1,6 +1,7 @@
 Backend for F1 prediction web app. Friends should be able to log in to a particular "game" where they can predict who comes 10th and who goes out first for an F1 race (for now).
 
 ### Structure
+```text
 f1-predictions/
 ├── backend/
 │   ├── app/
@@ -63,15 +64,16 @@ f1-predictions/
 ├── .gitignore
 ├── README.md
 └── docker-compose.yml
+```
 
 ### Development plan
-Models + migrations
-CRUD functions
-Core scoring logic
-Auth (JWT)
-API endpoints
-Frontend
-Hosting
+- Models + migrations
+- CRUD functions
+- Core scoring logic
+- Auth (JWT)
+- API endpoints
+- Frontend
+- Hosting
 
 ### Commands
 ```uv run alembic revision --autogenerate -m "message"```
