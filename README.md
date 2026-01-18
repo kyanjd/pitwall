@@ -1,0 +1,1 @@
+Backend for F1 prediction web app. Friends should be able to log in to a particular "game" where they can predict who comes 10th and who goes out first for an F1 race (for now).
