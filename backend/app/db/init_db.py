@@ -3,6 +3,7 @@ import logging
 from sqlmodel import SQLModel
 
 from app.db.session import engine
+from app.models.game import Game
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
