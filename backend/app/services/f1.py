@@ -37,9 +37,24 @@ class F1Client:
 
     def race_results(self, season: int, round: int) -> dict:
         result = self.get(f"{season}/{round}/results.json")
-        return result["MRData"]["RaceTable"]["Races"]
+        return result["MRData"]["RaceTable"]["Races"][0]
+
+    def all_races_in_season(self, season: int) -> dict:
+        result = self.get(f"{season}.json")
+        race_list = result["MRData"]["RaceTable"]["Races"]
+        return race_list[0]
+
+    def race_name_from_round(self, season: int, round: int) -> dict:
+        result = self.get(f"{season}/{round}/circuits.json")
+        circuit_info = result["MRData"]["CircuitTable"]["Circuits"][0]
+        return {
+            "circuitId": circuit_info["circuitId"],
+            "circuitName": circuit_info["circuitName"],
+        }
 
 
 if __name__ == "__main__":
     client = F1Client()
-    print(client.race_results(2025, 10))
+    # print(client.race_results(2026, 1))
+    # print(client.race_name_from_round(2026, 20))
+    print(client.all_circuits_in_season(2026))
