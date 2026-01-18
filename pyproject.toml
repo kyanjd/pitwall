@@ -7,5 +7,21 @@ requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.128.0",
     "psycopg[binary]>=3.3.2",
+    "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.45",
 ]
+
+[tool.ruff]
+# Path discovery, excludes, etc. (Optional, but good practice)
+line-length = 120
+
+[tool.ruff.lint]
+# 1. Select the rules you want active.
+# 'I' = Isort (Import Sorting)
+# 'F' = Pyflakes (Unused variable/import warnings)
+# 'E' = Pycodestyle errors
+select = ["F", "E", "W", "I"]
+
+# 2. Prevent F401 (Unused Imports) from being fixed/deleted automatically.
+# This keeps the warning visible but forces you to delete the import manually.
+unfixable = ["F401"]
