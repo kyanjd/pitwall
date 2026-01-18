@@ -62,3 +62,12 @@ f1-predictions/
 ├── .gitignore
 ├── README.md
 └── docker-compose.yml
+
+Correct order:
+Models + migrations
+CRUD functions
+Core scoring logic
+Auth (JWT)
+API endpoints
+Frontend
+Hosting

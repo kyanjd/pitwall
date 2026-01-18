@@ -9,6 +9,7 @@ dependencies = [
     "psycopg[binary]>=3.3.2",
     "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.45",
+    "sqlmodel>=0.0.31",
 ]
 
 [tool.ruff]
