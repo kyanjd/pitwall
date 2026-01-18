@@ -12,6 +12,6 @@ if not DATABASE_URL:
 engine = create_engine(DATABASE_URL, echo=True)
 
 
-def get_session():
+def get_session_local():
     with Session(engine) as session:
         yield session
