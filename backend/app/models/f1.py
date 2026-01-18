@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from sqlmodel import Field, SQLModel, UniqueConstraint
 
@@ -23,6 +24,7 @@ class Result(SQLModel, table=True):
     id: int = Field(default_factory=uuid.uuid4, primary_key=True)
     raceId: str = Field(foreign_key="race.id", nullable=False)
     driverId: str = Field(foreign_key="driver.id", nullable=False)
+    sessionId: uuid.UUID = Field(foreign_key="session.id", nullable=False)
     position: int = Field(nullable=False)
     status: str = Field(nullable=False)
 
@@ -31,3 +33,10 @@ class Driver(SQLModel, table=True):
     id: str = Field(primary_key=True)
     firstName: str = Field(nullable=False)
     lastName: str = Field(nullable=False)
+
+
+class Session(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    race_id: uuid.UUID = Field(foreign_key="race.id", nullable=False, index=True)
+    type: str = Field(nullable=False)  # "FP1", "Qualifying", "Sprint", "Race"
+    date: datetime = Field(nullable=False)

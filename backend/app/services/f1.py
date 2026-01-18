@@ -57,4 +57,4 @@ if __name__ == "__main__":
     client = F1Client()
     # print(client.race_results(2026, 1))
     # print(client.race_name_from_round(2026, 20))
-    print(client.all_circuits_in_season(2026))
+    # print(client.all_circuits_in_season(2026))
