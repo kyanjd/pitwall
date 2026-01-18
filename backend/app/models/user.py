@@ -22,3 +22,8 @@ class User(UserBase, table=True):
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=64)
+
+
+class UserPublic(UserBase):
+    id: int
+    email: EmailStr
