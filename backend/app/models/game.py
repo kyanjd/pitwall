@@ -1,4 +1,8 @@
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 from sqlmodel import Field, Relationship, SQLModel
 

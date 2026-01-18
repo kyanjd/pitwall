@@ -27,3 +27,5 @@ select = ["F", "E", "W", "I"]
 # 2. Prevent F401 (Unused Imports) from being fixed/deleted automatically.
 # This keeps the warning visible but forces you to delete the import manually.
 unfixable = ["F401"]
+
+exclude = ["migrations"]
