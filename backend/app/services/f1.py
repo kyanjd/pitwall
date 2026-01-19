@@ -3,7 +3,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 
-class F1Client:
+class F1DataClient:
     BASE_URL = "https://api.jolpi.ca/ergast/f1"
 
     def __init__(self, timeout: int = 10, total_retries: int = 3, backoff_factor: float = 0.5):
@@ -42,7 +42,7 @@ class F1Client:
     def all_races_in_season(self, season: int) -> dict:
         result = self.get(f"{season}.json")
         race_list = result["MRData"]["RaceTable"]["Races"]
-        return race_list[0]
+        return race_list
 
     def race_name_from_round(self, season: int, round: int) -> dict:
         result = self.get(f"{season}/{round}/circuits.json")
@@ -54,7 +54,7 @@ class F1Client:
 
 
 if __name__ == "__main__":
-    client = F1Client()
+    client = F1DataClient()
     # print(client.race_results(2026, 1))
     # print(client.race_name_from_round(2026, 20))
-    # print(client.all_circuits_in_season(2026))
+    print(client.all_races_in_season(2026))

@@ -17,6 +17,7 @@ class Race(SQLModel, table=True):
 class Circuit(SQLModel, table=True):
     id: str = Field(primary_key=True)
     name: str = Field(nullable=False)
+    locality: str = Field(nullable=False)
     country: str = Field(nullable=False)
 
 
