@@ -14,7 +14,6 @@ class Race(SQLModel, table=True):
     date: str = Field(nullable=False)
 
     sessions: list["Session"] = Relationship(back_populates="race")
-    results: list["Result"] = Relationship(back_populates="race")
 
 
 class Circuit(SQLModel, table=True):
@@ -31,8 +30,8 @@ class Result(SQLModel, table=True):
     position: int = Field(nullable=False)
     status: str = Field(nullable=False)
 
-    driver: "Driver" = Relationship(back_populates="results")
-    session: "Session" = Relationship(back_populates="results")
+    driver: "Driver | None" = Relationship(back_populates="results")
+    session: "Session | None" = Relationship(back_populates="results")
 
 
 class Driver(SQLModel, table=True):
@@ -41,7 +40,7 @@ class Driver(SQLModel, table=True):
     last_name: str = Field(nullable=False)
     constructor_id: str = Field(foreign_key="constructor.id", nullable=False)
 
-    constructor: "Constructor" = Relationship(back_populates="drivers")
+    constructor: "Constructor | None" = Relationship(back_populates="drivers")
     results: list["Result"] = Relationship(back_populates="driver")
 
 
@@ -51,7 +50,7 @@ class Session(SQLModel, table=True):
     type: str = Field(nullable=False)  # "FP1", "Qualifying", "Sprint", "Race"
     date: datetime = Field(nullable=False)
 
-    race: "Race" = Relationship(back_populates="sessions")
+    race: "Race | None" = Relationship(back_populates="sessions")
     results: list["Result"] = Relationship(back_populates="session")
 
 

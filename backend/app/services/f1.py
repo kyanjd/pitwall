@@ -54,6 +54,7 @@ class F1DataClient:
 
 
 if __name__ == "__main__":
+    pass
     # from app.db.session import engine  # your SQLAlchemy engine
     # from sqlmodel import SQLModel, text
 
