@@ -1,11 +1,11 @@
-import os
 from logging.config import fileConfig
 
 from alembic import context
+from app.core.config import settings
+from app.models.f1 import Circuit, Constructor, Driver, Race, Result, Session
 from app.models.game import Game
 from app.models.game_user import GameUser
 from app.models.user import User
-from dotenv import load_dotenv
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
@@ -30,14 +30,6 @@ target_metadata = SQLModel.metadata
 # ... etc.
 
 
-def get_url() -> str:
-    load_dotenv()
-    url = os.getenv("DATABASE_URL")
-    if not url:
-        raise ValueError("DATABASE_URL environment variable is not set")
-    return url
-
-
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -50,7 +42,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = get_url()
+    url = settings.DATABASE_URL
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -71,7 +63,7 @@ def run_migrations_online() -> None:
     """
     configuration = config.get_section(config.config_ini_section)
     assert configuration is not None
-    configuration["sqlalchemy.url"] = get_url()
+    configuration["sqlalchemy.url"] = settings.DATABASE_URL
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",
