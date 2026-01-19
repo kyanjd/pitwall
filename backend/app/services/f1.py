@@ -54,7 +54,9 @@ class F1DataClient:
 
 
 if __name__ == "__main__":
-    client = F1DataClient()
-    # print(client.race_results(2026, 1))
-    # print(client.race_name_from_round(2026, 20))
-    print(client.all_races_in_season(2026))
+    # from app.db.session import engine  # your SQLAlchemy engine
+    # from sqlmodel import SQLModel, text
+
+    # SQLModel.metadata.drop_all(engine)
+    # with engine.begin() as conn:
+    #     conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
