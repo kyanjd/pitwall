@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from sqlmodel import Session, create_engine
 
 from app.core.config import settings
@@ -5,6 +7,7 @@ from app.core.config import settings
 engine = create_engine(settings.DATABASE_URL, echo=True)
 
 
+@contextmanager
 def get_session_local():
     with Session(engine) as session:
         yield session

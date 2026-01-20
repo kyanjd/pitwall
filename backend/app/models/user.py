@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 
-if TYPE_CHECKING:
-    from app.models.game import Game
+# if TYPE_CHECKING:
+from app.models.game import Game
 from app.models.game_user import GameUser
 
 

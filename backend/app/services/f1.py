@@ -61,3 +61,5 @@ if __name__ == "__main__":
     # SQLModel.metadata.drop_all(engine)
     # with engine.begin() as conn:
     #     conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+    client = F1DataClient()
+    print(client.all_races_in_season(2026))

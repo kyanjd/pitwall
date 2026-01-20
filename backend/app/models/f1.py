@@ -1,12 +1,13 @@
 import uuid
 from datetime import datetime
+from typing import Optional
 
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
 
 class Race(SQLModel, table=True):
     __table_args__ = (UniqueConstraint("season", "round"),)
-    id: int = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
     circuit_id: str = Field(foreign_key="circuit.id", nullable=False)
     round: int = Field(nullable=False, index=True)
@@ -30,8 +31,8 @@ class Result(SQLModel, table=True):
     position: int = Field(nullable=False)
     status: str = Field(nullable=False)
 
-    driver: "Driver | None" = Relationship(back_populates="results")
-    session: "Session | None" = Relationship(back_populates="results")
+    driver: Optional["Driver"] = Relationship(back_populates="results")
+    session: Optional["Session"] = Relationship(back_populates="results")
 
 
 class Driver(SQLModel, table=True):
@@ -40,7 +41,7 @@ class Driver(SQLModel, table=True):
     last_name: str = Field(nullable=False)
     constructor_id: str = Field(foreign_key="constructor.id", nullable=False)
 
-    constructor: "Constructor | None" = Relationship(back_populates="drivers")
+    constructor: Optional["Constructor"] = Relationship(back_populates="drivers")
     results: list["Result"] = Relationship(back_populates="driver")
 
 
@@ -50,7 +51,7 @@ class Session(SQLModel, table=True):
     type: str = Field(nullable=False)  # "FP1", "Qualifying", "Sprint", "Race"
     date: datetime = Field(nullable=False)
 
-    race: "Race | None" = Relationship(back_populates="sessions")
+    race: Optional["Race"] = Relationship(back_populates="sessions")
     results: list["Result"] = Relationship(back_populates="session")
 
 
