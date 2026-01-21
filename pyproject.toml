@@ -33,4 +33,4 @@ select = ["F", "E", "W", "I"]
 # This keeps the warning visible but forces you to delete the import manually.
 unfixable = ["F401"]
 
-exclude = ["migrations"]
+exclude = ["migrations", "alembic"]
