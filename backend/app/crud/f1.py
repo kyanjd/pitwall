@@ -4,7 +4,7 @@ from app.models.f1 import Circuit
 
 
 def upsert_circuit(*, session: Session, circuit: Circuit) -> Circuit:
-    statement = select(Circuit).where(Circuit.id == circuit.id)
+    statement = select(Circuit).where(Circuit.external_id == circuit.external_id)
     existing_circuit = session.exec(statement).first()
 
     if existing_circuit:

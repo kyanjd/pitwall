@@ -16,7 +16,7 @@ class Ingestor:
         for race in races:
             circuit_data = race["Circuit"]
             circuit_model = Circuit(
-                id=circuit_data["circuitId"],
+                external_id=circuit_data["circuitId"],
                 name=circuit_data["circuitName"],
                 locality=circuit_data["Location"]["locality"],
                 country=circuit_data["Location"]["country"],
@@ -29,4 +29,4 @@ class Ingestor:
 if __name__ == "__main__":
     with get_session_local() as session:
         ingestor = Ingestor(session=session)
-        ingestor.ingest_circuits_for_season(2026)
+        ingestor.ingest_circuits_for_season(2025)
