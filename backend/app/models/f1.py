@@ -58,6 +58,8 @@ class Session(SQLModel, table=True):
 
 class Constructor(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    external_id: str = Field(nullable=False, unique=True, index=True)
     name: str = Field(nullable=False)
+    nationality: str = Field(nullable=False)
 
     drivers: list["Driver"] = Relationship(back_populates="constructor")
