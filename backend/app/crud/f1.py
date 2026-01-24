@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from app.models.f1 import Circuit
+from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
 
 
 def upsert_circuit(*, session: Session, circuit: Circuit) -> Circuit:
@@ -16,3 +16,77 @@ def upsert_circuit(*, session: Session, circuit: Circuit) -> Circuit:
     else:
         session.add(circuit)
         return circuit
+
+
+def upsert_race(*, session: Session, race: Race) -> Race:
+    statement = select(Race).where(Race.season == race.season, Race.round == race.round)
+    existing_race = session.exec(statement).first()
+
+    if existing_race:
+        existing_race.name = race.name
+        existing_race.circuit_id = race.circuit_id
+        session.add(existing_race)
+        return existing_race
+    else:
+        session.add(race)
+        return race
+
+
+def upsert_f1session(*, session: Session, f1session: F1Session) -> F1Session:
+    statement = select(F1Session).where(F1Session.race_id == f1session.race_id, F1Session.type == f1session.type)
+    existing_session = session.exec(statement).first()
+
+    if existing_session:
+        existing_session.date = f1session.date
+        session.add(existing_session)
+        return existing_session
+    else:
+        session.add(f1session)
+        return f1session
+
+
+def upsert_driver(*, session: Session, driver: Driver) -> Driver:
+    statement = select(Driver).where(Driver.external_id == driver.external_id)
+    existing_driver = session.exec(statement).first()
+
+    if existing_driver:
+        existing_driver.code = driver.code
+        existing_driver.first_name = driver.first_name
+        existing_driver.last_name = driver.last_name
+        session.add(existing_driver)
+        return existing_driver
+    else:
+        session.add(driver)
+        return driver
+
+
+def upsert_constructor(*, session: Session, constructor: Constructor) -> Constructor:
+    statement = select(Constructor).where(Constructor.external_id == constructor.external_id)
+    existing_constructor = session.exec(statement).first()
+
+    if existing_constructor:
+        existing_constructor.name = constructor.name
+        existing_constructor.nationality = constructor.nationality
+        session.add(existing_constructor)
+        return existing_constructor
+    else:
+        session.add(constructor)
+        return constructor
+
+
+def upsert_result(*, session: Session, result: Result) -> Result:
+    statement = select(Result).where(Result.driver_id == result.driver_id, Result.f1session_id == result.f1session_id)
+    existing_result = session.exec(statement).first()
+
+    if existing_result:
+        existing_result.constructor_id = result.constructor_id
+        existing_result.position = result.position
+        existing_result.position_text = result.position_text
+        existing_result.status = result.status
+        existing_result.grid = result.grid
+        existing_result.laps = result.laps
+        session.add(existing_result)
+        return existing_result
+    else:
+        session.add(result)
+        return result

@@ -35,11 +35,7 @@ class F1DataClient:
             print(f"An error occurred: {e}")
             return {}
 
-    def race_results_in_round(self, season: int, round: int) -> dict:
-        result = self.get(f"{season}/{round}/results.json")
-        return result["MRData"]
-
-    def all_races_in_season(self, season: int) -> list:
+    def all_circuits_in_season(self, season: int) -> list:
         # Allows fetching circuits before races are complete
         result = self.get(f"{season}.json")
         race_list = result["MRData"]["RaceTable"]["Races"]
@@ -55,9 +51,9 @@ class F1DataClient:
         constructor_list = result["MRData"]["ConstructorTable"]["Constructors"]
         return constructor_list
 
-    def all_results_in_season(self, season: int) -> list:
+    def all_races_in_season(self, season: int) -> list:
         result = self.get(f"{season}/results.json")
-        result_list = result["MRData"]
+        result_list = result["MRData"]["RaceTable"]["Races"]
         return result_list
 
 
@@ -70,4 +66,3 @@ if __name__ == "__main__":
     # with engine.begin() as conn:
     #     conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
     client = F1DataClient()
-    print(client.race_results_in_round(2025, 1))
