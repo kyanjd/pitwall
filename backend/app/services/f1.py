@@ -86,6 +86,10 @@ class F1DataClient:
         result_list = self.get_all(f"{season}/results.json")
         return result_list
 
+    def all_qualifying_in_season(self, season: int) -> list:
+        result_list = self.get_all(f"{season}/qualifying.json")
+        return result_list
+
     def race_by_round(self, season: int, round: int) -> dict:
         result = self.get(f"{season}/{round}/results.json")
         result_list = result["MRData"]["RaceTable"]
@@ -100,5 +104,5 @@ if __name__ == "__main__":
     client = F1DataClient()
     # print(client.race_by_round(2025, 3))
     # print(client.all_circuits_in_season(2026))
-    races = client.all_races_in_season(2025)
-    print(races[11])
+    races = client.all_qualifying_in_season(2025)
+    print(races[0])
