@@ -90,3 +90,22 @@ def upsert_result(*, session: Session, result: Result) -> Result:
     else:
         session.add(result)
         return result
+
+
+def read_result_test(*, session: Session):
+    statement = (
+        select(Result)
+        .join(F1Session, Result.f1session_id == F1Session.id)
+        .join(Race, F1Session.race_id == Race.id)
+        .where(Race.season == 2025, Race.round == 11, F1Session.type == "Race", Result.position == 2)
+    )
+
+    result_10th = session.exec(statement).first()
+    print(result_10th.driver.first_name, result_10th.constructor.name)
+
+
+if __name__ == "__main__":
+    from app.db.session import get_session_local
+
+    with get_session_local() as session:
+        read_result_test(session=session)

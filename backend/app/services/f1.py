@@ -25,15 +25,46 @@ class F1DataClient:
         session.mount("https://", adapter)
         return session
 
-    def get(self, url: str) -> dict:
+    def get(self, url: str, offset: int = 0, limit: int = 30) -> dict:
         try:
             url = f"{self.BASE_URL}/{url.lstrip('/')}"
-            response = self.session.get(url, timeout=self.timeout)
+            params = {"offset": offset, "limit": limit}
+            response = self.session.get(url, params=params, timeout=self.timeout)
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
             print(f"An error occurred: {e}")
             return {}
+
+    def get_all(self, url: str, limit: int = 100) -> list:
+        offset = 0
+        all_items: list = []
+
+        while True:
+            data = self.get(url, offset=offset, limit=limit)
+            if not data:
+                break
+
+            mrdata = data.get("MRData", {})
+            total = int(mrdata.get("total", 0))
+
+            # Figure out where the list actually lives
+            if "RaceTable" in mrdata:
+                items = mrdata["RaceTable"].get("Races", [])
+            elif "DriverTable" in mrdata:
+                items = mrdata["DriverTable"].get("Drivers", [])
+            elif "ConstructorTable" in mrdata:
+                items = mrdata["ConstructorTable"].get("Constructors", [])
+            else:
+                break
+
+            all_items.extend(items)
+
+            offset += limit
+            if offset >= total:
+                break
+
+        return all_items
 
     def all_circuits_in_season(self, season: int) -> list:
         # Allows fetching circuits before races are complete
@@ -52,8 +83,12 @@ class F1DataClient:
         return constructor_list
 
     def all_races_in_season(self, season: int) -> list:
-        result = self.get(f"{season}/results.json")
-        result_list = result["MRData"]["RaceTable"]["Races"]
+        result_list = self.get_all(f"{season}/results.json")
+        return result_list
+
+    def race_by_round(self, season: int, round: int) -> dict:
+        result = self.get(f"{season}/{round}/results.json")
+        result_list = result["MRData"]["RaceTable"]
         return result_list
 
 
@@ -62,7 +97,8 @@ if __name__ == "__main__":
     # from app.db.session import engine  # your SQLAlchemy engine
     # from sqlmodel import SQLModel, text
 
-    # SQLModel.metadata.drop_all(engine)
-    # with engine.begin() as conn:
-    #     conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
     client = F1DataClient()
+    # print(client.race_by_round(2025, 3))
+    # print(client.all_circuits_in_season(2026))
+    races = client.all_races_in_season(2025)
+    print(races[11])
