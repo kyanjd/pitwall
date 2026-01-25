@@ -3,6 +3,7 @@ import logging
 from sqlmodel import SQLModel
 
 from app.db.session import engine
+from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
 from app.models.game import Game
 from app.models.game_user import GameUser
 from app.models.user import User

@@ -14,6 +14,7 @@ def get_session_local():
 
 
 if __name__ == "__main__":
+    from sqlalchemy import text
     from sqlmodel import SQLModel, delete
 
     from app.models.f1 import Circuit
@@ -22,4 +23,6 @@ if __name__ == "__main__":
     #     session.exec(delete(Circuit))
     #     session.commit()
 
-    SQLModel.metadata.drop_all(engine)
+    with engine.begin() as conn:
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
