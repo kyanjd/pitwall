@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     from app.models.f1 import Circuit
 
-    # with Session(engine) as session:
+    # with Session(engine) as session:a
     #     session.exec(delete(Circuit))
     #     session.commit()
 

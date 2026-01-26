@@ -81,7 +81,7 @@ class Ingestor:
         result_db = crud.f1.upsert_result(session=self.session, result=result_model)
         return result_db
 
-    def ingest(self, season: int, f1session_type: F1SessionType = F1SessionType.RACE):
+    def ingest_results_and_background(self, season: int, f1session_type: F1SessionType = F1SessionType.RACE):
         start = time.time()
 
         if f1session_type == F1SessionType.RACE:
@@ -114,6 +114,9 @@ class Ingestor:
 
         print(time.time() - start)
 
+    def ingest_background(self, season: int):
+        pass
+
     def to_datetime(self, date_str: str, time_str: str) -> datetime:
         dt = datetime.fromisoformat(f"{date_str}T{time_str.replace('Z', '+00:00')}")
         return dt
@@ -122,4 +125,5 @@ class Ingestor:
 if __name__ == "__main__":
     with get_session_local() as session:
         ingestor = Ingestor(session=session)
-        ingestor.ingest(2025)
+        ingestor.ingest_results_and_background(2026, F1SessionType.RACE)
+        ingestor.ingest_results_and_background(2026, F1SessionType.QUALIFYING)
