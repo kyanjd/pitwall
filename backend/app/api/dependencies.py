@@ -5,7 +5,7 @@ from app import crud
 from app.core.config import settings
 from app.core.errors import UnauthorizedError
 from app.core.security import ALGORITHM
-from app.db.session import get_session_local as get_session
+from app.db.session import get_session
 from app.models.user import User
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer

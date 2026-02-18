@@ -13,6 +13,11 @@ def get_session_local():
         yield session
 
 
+def get_session():
+    with Session(engine) as session:
+        yield session
+
+
 if __name__ == "__main__":
     from sqlalchemy import text
     from sqlmodel import SQLModel, delete
