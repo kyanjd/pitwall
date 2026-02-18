@@ -2,7 +2,7 @@ from logging.config import fileConfig
 
 from alembic import context
 from app.core.config import settings
-from app.models.f1 import Circuit, Constructor, Driver, Race, Result, Session
+from app.models.f1 import Circuit, Constructor, Driver, Race, Result, F1Session
 from app.models.game import Game
 from app.models.game_user import GameUser
 from app.models.user import User
