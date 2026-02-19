@@ -1,7 +1,7 @@
 from typing import Any
 
 from app import crud
-from app.api.dependencies import CurrentSession
+from app.api.dependencies import CurrentSession, CurrentUser
 from app.core.errors import AlreadyExistsError
 from app.models.user import UserCreate, UserPublic
 from fastapi import APIRouter
@@ -16,3 +16,8 @@ def create_user(session: CurrentSession, user_create: UserCreate) -> Any:
         raise AlreadyExistsError(f"User with email {user_create.email} already exists.")
     user = crud.user.create_user(session=session, user_create=user_create)
     return user
+
+
+@router.get("/me", response_model=UserPublic)
+def get_me(current_user: CurrentUser) -> Any:
+    return current_user

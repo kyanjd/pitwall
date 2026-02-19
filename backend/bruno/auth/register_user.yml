@@ -1,0 +1,31 @@
+info:
+  name: register_user
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/user/"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Test User",
+        "email": "test+{{random}}@example.com",
+        "password": "testpassword"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: bru.setEnvVar("random", Date.now());
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
