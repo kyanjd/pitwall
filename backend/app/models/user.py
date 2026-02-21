@@ -6,8 +6,7 @@ from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 
 # if TYPE_CHECKING:
-from app.models.game import Game
-from app.models.game_user import GameUser
+from app.models.game import Game, GameUser
 
 
 class UserBase(SQLModel):

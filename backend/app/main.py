@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routes import auth, user
+from app.api.routes import auth, game, user
 from app.core.errors import BaseAppError
 
 app = FastAPI(title="Pitwall", version="0.1.0")
@@ -26,6 +26,7 @@ async def app_error_handler(request: Request, exc: BaseAppError) -> JSONResponse
 
 app.include_router(user.router)
 app.include_router(auth.router)
+app.include_router(game.router)
 
 
 @app.get("/health")
