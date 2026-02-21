@@ -1,3 +1,5 @@
+import uuid
+
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash
@@ -21,5 +23,5 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
     return session.exec(statement).first()
 
 
-def get_user_by_id(*, session: Session, user_id: int) -> User | None:
+def get_user_by_id(*, session: Session, user_id: uuid.UUID) -> User | None:
     return session.get(User, user_id)

@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
@@ -10,7 +11,7 @@ from app.models.game_user import GameUser
 
 
 class Game(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

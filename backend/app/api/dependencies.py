@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 import jwt
@@ -23,13 +24,13 @@ def get_current_user(
 ) -> User:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str | None = payload.get("sub")
+        user_id: uuid.UUID | None = payload.get("sub")
         if user_id is None:
             raise UnauthorizedError("Invalid token.")
     except InvalidTokenError:
         raise UnauthorizedError("Invalid token.")
 
-    user = crud.user.get_user_by_id(session=session, user_id=int(user_id))
+    user = crud.user.get_user_by_id(session=session, user_id=user_id)
     if not user:
         raise UnauthorizedError("User not found.")
     return user

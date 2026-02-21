@@ -1,5 +1,7 @@
 # from typing import TYPE_CHECKING
 
+import uuid
+
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -14,7 +16,7 @@ class UserBase(SQLModel):
 
 
 class User(UserBase, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
 
     games: list["Game"] = Relationship(back_populates="users", link_model=GameUser)
@@ -25,5 +27,4 @@ class UserCreate(UserBase):
 
 
 class UserPublic(UserBase):
-    id: int
-    email: EmailStr
+    id: uuid.UUID
