@@ -1,3 +1,5 @@
+import secrets
+import string
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -22,3 +24,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def create_invite_code() -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    invite_code = "".join(secrets.choice(alphabet) for _ in range(6))
+    return invite_code
