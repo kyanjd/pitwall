@@ -6,6 +6,9 @@ info:
 http:
   method: GET
   url: "{{base_url}}/user/me"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
   auth: inherit
 
 settings:

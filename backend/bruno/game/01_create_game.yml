@@ -1,17 +1,23 @@
 info:
-  name: login
+  name: 01_create_game
   type: http
-  seq: 2
+  seq: 1
 
 http:
   method: POST
-  url: "{{base_url}}/auth/login"
+  url: "{{base_url}}/game/"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
+  params:
+    - name: ""
+      value: ""
+      type: query
   body:
     type: json
     data: |-
       {
-        "email": "test+{{random}}@example.com",
-        "password": "testpassword"
+        "name": "Test Game"
       }
   auth: inherit
 
@@ -20,7 +26,7 @@ runtime:
     - type: after-response
       code: |-
         const body = res.body;
-        bru.setEnvVar("access_token", body.access_token);
+        bru.setEnvVar("invite_code", body.invite_code);
 
 settings:
   encodeUrl: true

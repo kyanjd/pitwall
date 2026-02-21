@@ -1,5 +1,5 @@
 info:
-  name: login
+  name: 02_login
   type: http
   seq: 2
 
@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "email": "test+{{random}}@example.com",
-        "password": "testpassword"
+        "email": "join+{{random}}@example.com",
+        "password": "joinpassword"
       }
   auth: inherit
 
@@ -20,7 +20,7 @@ runtime:
     - type: after-response
       code: |-
         const body = res.body;
-        bru.setEnvVar("access_token", body.access_token);
+        bru.setEnvVar("join_access_token", body.access_token);
 
 settings:
   encodeUrl: true
