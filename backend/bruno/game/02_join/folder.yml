@@ -1,0 +1,7 @@
+info:
+  name: 02_join
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
