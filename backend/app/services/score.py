@@ -1,3 +1,6 @@
+import uuid
+
+
 class Scorer:
     SCORE_DICT = {
         0: 25,
@@ -16,7 +19,7 @@ class Scorer:
         diff = abs(actual_position - predicted_position)
         return self.SCORE_DICT.get(diff, 0)
 
-    def score_dnf(self, actual_driver, predicted_driver) -> int:
+    def score_dnf(self, actual_driver: uuid.UUID | None, predicted_driver: uuid.UUID) -> int:
         if actual_driver is None:
             return 0
         if actual_driver == predicted_driver:

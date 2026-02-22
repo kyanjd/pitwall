@@ -1,6 +1,6 @@
 import uuid
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from app.core.errors import NotFoundError
 from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
@@ -107,7 +107,7 @@ def get_first_dnf_by_f1session(*, session: Session, f1session_id: uuid.UUID) -> 
     statement = (
         select(Result)
         .where(Result.f1session_id == f1session_id, Result.status != "Finished")
-        .order_by(Result.laps.asc())
+        .order_by(col(Result.dnf_order).asc().nulls_last(), col(Result.laps).asc())
     )
     result = session.exec(statement).first()
     return result.driver if result else None

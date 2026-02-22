@@ -78,7 +78,6 @@ def score_prediction(*, session: Session, prediction: Prediction) -> int:
         actual_position=position_result.position, predicted_position=prediction.position
     )
 
-    dnf_result = crud.f1.get_result_by_f1session_and_driver(
-        session=session, f1session_id=prediction.f1session_id, driver_id=prediction.dnf_driver_id
-    )
-    dnf_score = scorer.score_dnf(predicted_driver=prediction.dnf_driver_id)
+    driver = crud.f1.get_first_dnf_by_f1session(session=session, f1session_id=prediction.f1session_id)
+    actual_driver = driver.id if driver else None
+    dnf_score = scorer.score_dnf(actual_driver=actual_driver, predicted_driver=prediction.dnf_driver_id)
