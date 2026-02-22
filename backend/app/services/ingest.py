@@ -77,6 +77,7 @@ class Ingestor:
             status=result_data.get("status"),
             grid=result_data.get("grid"),
             laps=int(result_data["laps"]) if result_data.get("laps") is not None else None,
+            dnf_order=None,
         )
         result_db = crud.f1.upsert_result(session=self.session, result=result_model)
         return result_db

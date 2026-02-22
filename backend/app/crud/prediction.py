@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from app import crud
 from app.core.errors import NotFoundError
 from app.models.f1 import Result
-from app.models.prediction import Prediction, PredictionCreate
+from app.models.prediction import MemberScore, Prediction, PredictionCreate
 from app.services.score import Scorer
 
 
@@ -68,7 +68,7 @@ def get_prediction_for_user_and_session(
     return prediction
 
 
-def score_prediction(*, session: Session, prediction: Prediction) -> int:
+def score_prediction(*, session: Session, user_id: uuid.UUID, prediction: Prediction) -> MemberScore:
     scorer = Scorer()
 
     position_result = crud.f1.get_result_by_f1session_and_driver(
@@ -81,3 +81,5 @@ def score_prediction(*, session: Session, prediction: Prediction) -> int:
     driver = crud.f1.get_first_dnf_by_f1session(session=session, f1session_id=prediction.f1session_id)
     actual_driver = driver.id if driver else None
     dnf_score = scorer.score_dnf(actual_driver=actual_driver, predicted_driver=prediction.dnf_driver_id)
+
+    return MemberScore(user_id=user_id, position_score=position_score, dnf_score=dnf_score)

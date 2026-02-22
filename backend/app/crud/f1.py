@@ -113,20 +113,32 @@ def get_first_dnf_by_f1session(*, session: Session, f1session_id: uuid.UUID) -> 
     return result.driver if result else None
 
 
-def read_result_test(*, session: Session):
-    statement = (
-        select(Result)
-        .join(F1Session, Result.f1session_id == F1Session.id)
-        .join(Race, F1Session.race_id == Race.id)
-        .where(Race.season == 2025, Race.round == 11, F1Session.type == "Race", Result.position == 2)
-    )
-
-    result_10th = session.exec(statement).first()
-    print(result_10th.driver.first_name, result_10th.constructor.name)
+def get_drivers_for_session(*, session: Session, f1session_id: uuid.UUID) -> list[Driver]:
+    statement = select(Driver).join(Result).where(Result.f1session_id == f1session_id)
+    drivers = list(session.exec(statement).all())
+    return drivers
 
 
-if __name__ == "__main__":
-    from app.db.session import get_session_local
+def get_sessions_for_season(*, session: Session, season: int) -> list[F1Session]:
+    statement = select(F1Session).join(Race).where(Race.season == season)
+    sessions = list(session.exec(statement).all())
+    return sessions
 
-    with get_session_local() as session:
-        read_result_test(session=session)
+
+# def read_result_test(*, session: Session):
+#     statement = (
+#         select(Result)
+#         .join(F1Session, Result.f1session_id == F1Session.id)
+#         .join(Race, F1Session.race_id == Race.id)
+#         .where(Race.season == 2025, Race.round == 11, F1Session.type == "Race", Result.position == 2)
+#     )
+
+#     result_10th = session.exec(statement).first()
+#     print(result_10th.driver.first_name, result_10th.constructor.name)
+
+
+# if __name__ == "__main__":
+#     from app.db.session import get_session_local
+
+#     with get_session_local() as session:
+#         read_result_test(session=session)

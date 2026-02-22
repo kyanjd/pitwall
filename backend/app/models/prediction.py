@@ -33,3 +33,18 @@ class PredictionPublic(SQLModel):
     position: int
     position_driver_id: uuid.UUID
     dnf_driver_id: uuid.UUID
+
+
+class MemberScore(SQLModel):
+    user_id: uuid.UUID
+    position_score: int
+    dnf_score: int
+
+    @property
+    def total_score(self) -> int:
+        return self.position_score + self.dnf_score
+
+
+class SessionScores(SQLModel):
+    f1session_id: uuid.UUID
+    member_scores: list[MemberScore]
