@@ -28,3 +28,38 @@ def upsert_prediction(
         db_obj.game_id = game_id
         session.add(db_obj)
         return db_obj
+
+
+def get_predictions_for_session(*, session: Session, game_id: uuid.UUID, f1session_id: uuid.UUID) -> list[Prediction]:
+    statement = select(Prediction).where(
+        Prediction.game_id == game_id,
+        Prediction.f1session_id == f1session_id,
+    )
+    predictions = list(session.exec(statement).all())
+    if not predictions:
+        raise NotFoundError(f"No predictions found for game {game_id} and session {f1session_id}")
+    return predictions
+
+
+def get_predictions_for_game(*, session: Session, game_id: uuid.UUID) -> list[Prediction]:
+    statement = select(Prediction).where(
+        Prediction.game_id == game_id,
+    )
+    predictions = list(session.exec(statement).all())
+    if not predictions:
+        raise NotFoundError(f"No predictions found for game {game_id}")
+    return predictions
+
+
+def get_prediction_for_user_and_session(
+    *, session: Session, game_id: uuid.UUID, f1session_id: uuid.UUID, user_id: uuid.UUID
+) -> Prediction:
+    statement = select(Prediction).where(
+        Prediction.game_id == game_id,
+        Prediction.f1session_id == f1session_id,
+        Prediction.user_id == user_id,
+    )
+    prediction = session.exec(statement).first()
+    if not prediction:
+        raise NotFoundError(f"No prediction found for game {game_id}, session {f1session_id} and user {user_id}")
+    return prediction

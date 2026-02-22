@@ -94,3 +94,61 @@ def make_prediction(
         position_driver_id=prediction.position_driver_id,
         dnf_driver_id=prediction.dnf_driver_id,
     )
+
+
+@router.get("/{game_id}/f1session/{f1session_id}/predictions", response_model=list[PredictionPublic])
+def get_all_predictions_for_session(
+    session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, f1session_id: uuid.UUID
+) -> list[PredictionPublic]:
+    predictions = crud.prediction.get_predictions_for_session(
+        session=session, game_id=game_id, f1session_id=f1session_id
+    )
+    return [
+        PredictionPublic(
+            id=prediction.id,
+            game_id=prediction.game_id,
+            user_id=prediction.user_id,
+            f1session_id=prediction.f1session_id,
+            position=prediction.position,
+            position_driver_id=prediction.position_driver_id,
+            dnf_driver_id=prediction.dnf_driver_id,
+        )
+        for prediction in predictions
+    ]
+
+
+@router.get("/{game_id}/predictions", response_model=list[PredictionPublic])
+def get_all_predictions_for_game(
+    session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID
+) -> list[PredictionPublic]:
+    predictions = crud.prediction.get_predictions_for_game(session=session, game_id=game_id)
+    return [
+        PredictionPublic(
+            id=prediction.id,
+            game_id=prediction.game_id,
+            user_id=prediction.user_id,
+            f1session_id=prediction.f1session_id,
+            position=prediction.position,
+            position_driver_id=prediction.position_driver_id,
+            dnf_driver_id=prediction.dnf_driver_id,
+        )
+        for prediction in predictions
+    ]
+
+
+@router.get("/{game_id}/f1session/{f1session_id}/me", response_model=PredictionPublic)
+def get_my_prediction(
+    session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, f1session_id: uuid.UUID
+) -> PredictionPublic:
+    prediction = crud.prediction.get_prediction_for_user_and_session(
+        session=session, game_id=game_id, f1session_id=f1session_id, user_id=current_user.id
+    )
+    return PredictionPublic(
+        id=prediction.id,
+        game_id=prediction.game_id,
+        user_id=prediction.user_id,
+        f1session_id=prediction.f1session_id,
+        position=prediction.position,
+        position_driver_id=prediction.position_driver_id,
+        dnf_driver_id=prediction.dnf_driver_id,
+    )
