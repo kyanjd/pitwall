@@ -64,6 +64,16 @@ class Race(SQLModel, table=True):
     f1sessions: list["F1Session"] = Relationship(back_populates="race")
 
 
+class F1SessionPublic(SQLModel):
+    id: uuid.UUID
+    type: str
+    date: datetime
+    race_id: uuid.UUID
+    race_name: str
+    race_round: int
+    race_season: int
+
+
 class Circuit(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     external_id: str = Field(nullable=False, unique=True, index=True)
