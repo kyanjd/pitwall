@@ -14,63 +14,32 @@ router = APIRouter(prefix="/game", tags=["game"])
 @router.post("/", response_model=GamePublic)
 def create_game(session: CurrentSession, current_user: CurrentUser, game_create: GameCreate) -> GamePublic:
     game = crud.game.create_game(session=session, game_create=game_create, created_by=current_user.id)
-    return GamePublic(
-        id=game.id,
-        name=game.name,
-        created_at=game.created_at,
-        created_by=game.created_by,
-        invite_code=game.invite_code,
-    )
+    return GamePublic.model_validate(game)
 
 
 @router.get("/", response_model=list[GamePublic])
 def get_games(session: CurrentSession, current_user: CurrentUser) -> list[GamePublic]:
     games = crud.game.get_games_by_user(session=session, user_id=current_user.id)
-    return [
-        GamePublic(
-            id=game.id,
-            name=game.name,
-            created_at=game.created_at,
-            created_by=game.created_by,
-            invite_code=game.invite_code,
-        )
-        for game in games
-    ]
+    return [GamePublic.model_validate(game) for game in games]
 
 
 @router.post("/join", response_model=GamePublic)
 def join_game(session: CurrentSession, current_user: CurrentUser, join: GameJoin) -> GamePublic:
     game = crud.game.join_game(session=session, invite_code=join.invite_code, user_id=current_user.id)
-    return GamePublic(
-        id=game.id,
-        name=game.name,
-        created_at=game.created_at,
-        created_by=game.created_by,
-        invite_code=game.invite_code,
-    )
+    return GamePublic.model_validate(game)
 
 
 @router.get("/{game_id}", response_model=GamePublic)
 def get_game(session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID) -> GamePublic:
     game = crud.game.get_game_by_id(session=session, game_id=game_id, user_id=current_user.id)
-    return GamePublic(
-        id=game.id,
-        name=game.name,
-        created_at=game.created_at,
-        created_by=game.created_by,
-        invite_code=game.invite_code,
-    )
+    return GamePublic.model_validate(game)
 
 
 @router.get("/{game_id}/members", response_model=GamePublicWithMembers)
 def get_game_members(session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID) -> GamePublicWithMembers:
     game, members = crud.game.get_game_by_id_with_members(session=session, game_id=game_id, user_id=current_user.id)
     return GamePublicWithMembers(
-        id=game.id,
-        name=game.name,
-        created_at=game.created_at,
-        created_by=game.created_by,
-        invite_code=game.invite_code,
+        **GamePublic.model_validate(game).model_dump(),
         members=[member.id for member in members],
     )
 
@@ -85,15 +54,7 @@ def make_prediction(
     prediction = crud.prediction.upsert_prediction(
         session=session, prediction_create=prediction_create, user_id=current_user.id, game_id=game_id
     )
-    return PredictionPublic(
-        id=prediction.id,
-        game_id=prediction.game_id,
-        user_id=prediction.user_id,
-        f1session_id=prediction.f1session_id,
-        position=prediction.position,
-        position_driver_id=prediction.position_driver_id,
-        dnf_driver_id=prediction.dnf_driver_id,
-    )
+    return PredictionPublic.model_validate(prediction)
 
 
 @router.get("/{game_id}/f1session/{f1session_id}/predictions", response_model=list[PredictionPublic])
@@ -103,18 +64,7 @@ def get_all_predictions_for_session(
     predictions = crud.prediction.get_predictions_for_session(
         session=session, game_id=game_id, f1session_id=f1session_id
     )
-    return [
-        PredictionPublic(
-            id=prediction.id,
-            game_id=prediction.game_id,
-            user_id=prediction.user_id,
-            f1session_id=prediction.f1session_id,
-            position=prediction.position,
-            position_driver_id=prediction.position_driver_id,
-            dnf_driver_id=prediction.dnf_driver_id,
-        )
-        for prediction in predictions
-    ]
+    return [PredictionPublic.model_validate(p) for p in predictions]
 
 
 @router.get("/{game_id}/predictions", response_model=list[PredictionPublic])
@@ -122,18 +72,7 @@ def get_all_predictions_for_game(
     session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID
 ) -> list[PredictionPublic]:
     predictions = crud.prediction.get_predictions_for_game(session=session, game_id=game_id)
-    return [
-        PredictionPublic(
-            id=prediction.id,
-            game_id=prediction.game_id,
-            user_id=prediction.user_id,
-            f1session_id=prediction.f1session_id,
-            position=prediction.position,
-            position_driver_id=prediction.position_driver_id,
-            dnf_driver_id=prediction.dnf_driver_id,
-        )
-        for prediction in predictions
-    ]
+    return [PredictionPublic.model_validate(p) for p in predictions]
 
 
 @router.get("/{game_id}/f1session/{f1session_id}/me", response_model=PredictionPublic)
@@ -143,12 +82,4 @@ def get_my_prediction(
     prediction = crud.prediction.get_prediction_for_user_and_session(
         session=session, game_id=game_id, f1session_id=f1session_id, user_id=current_user.id
     )
-    return PredictionPublic(
-        id=prediction.id,
-        game_id=prediction.game_id,
-        user_id=prediction.user_id,
-        f1session_id=prediction.f1session_id,
-        position=prediction.position,
-        position_driver_id=prediction.position_driver_id,
-        dnf_driver_id=prediction.dnf_driver_id,
-    )
+    return PredictionPublic.model_validate(prediction)
