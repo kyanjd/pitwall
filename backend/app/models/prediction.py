@@ -1,5 +1,6 @@
 import uuid
 
+from pydantic import computed_field
 from sqlmodel import Field, SQLModel, UniqueConstraint
 
 
@@ -40,6 +41,7 @@ class MemberScore(SQLModel):
     position_score: int
     dnf_score: int
 
+    @computed_field
     @property
     def total_score(self) -> int:
         return self.position_score + self.dnf_score

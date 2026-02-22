@@ -7,6 +7,7 @@ from sqlmodel import SQLModel
 from app.db.session import engine
 from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
 from app.models.game import Game, GameUser
+from app.models.prediction import Prediction
 from app.models.user import User
 
 logger = logging.getLogger(__name__)

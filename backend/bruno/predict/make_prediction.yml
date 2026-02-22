@@ -1,0 +1,23 @@
+info:
+  name: make_prediction
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{base_url}}/game/{{game_id}}/predict"
+  body:
+    type: json
+    data: |-
+      {
+        "f1session_id": "{{session_id}}",
+        "position_driver_id": "{{position_driver}}",
+        "dnf_driver_id": "{{dnf_driver}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -24,12 +24,14 @@ def upsert_prediction(
         existing_prediction.dnf_driver_id = prediction_create.dnf_driver_id
         existing_prediction.position = prediction_create.position
         session.add(existing_prediction)
+        session.commit()
+        session.refresh(existing_prediction)
         return existing_prediction
     else:
-        db_obj = Prediction.model_validate(prediction_create)
-        db_obj.user_id = user_id
-        db_obj.game_id = game_id
+        db_obj = Prediction.model_validate(prediction_create, update={"user_id": user_id, "game_id": game_id})
         session.add(db_obj)
+        session.commit()
+        session.refresh(db_obj)
         return db_obj
 
 

@@ -3,7 +3,7 @@ import uuid
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
 from app.models.game import GameCreate, GameJoin, GamePublic, GamePublicWithMembers
-from app.models.prediction import PredictionCreate, PredictionPublic
+from app.models.prediction import MemberScore, PredictionCreate, PredictionPublic
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -83,3 +83,14 @@ def get_my_prediction(
         session=session, game_id=game_id, f1session_id=f1session_id, user_id=current_user.id
     )
     return PredictionPublic.model_validate(prediction)
+
+
+@router.get("/{game_id}/f1session/{f1session_id}/score", response_model=MemberScore)
+def get_my_score_for_session(
+    session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, f1session_id: uuid.UUID
+) -> MemberScore:
+    prediction = crud.prediction.get_prediction_for_user_and_session(
+        session=session, game_id=game_id, f1session_id=f1session_id, user_id=current_user.id
+    )
+    member_score = crud.prediction.score_prediction(session=session, user_id=current_user.id, prediction=prediction)
+    return member_score

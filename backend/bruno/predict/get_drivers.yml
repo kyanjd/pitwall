@@ -1,11 +1,11 @@
 info:
-  name: get_sessions
+  name: get_drivers
   type: http
-  seq: 2
+  seq: 3
 
 http:
   method: GET
-  url: "{{base_url}}/f1/season/{{season}}/sessions"
+  url: "{{base_url}}/f1/session/{{session_id}}/drivers"
   auth: inherit
 
 runtime:
@@ -13,7 +13,8 @@ runtime:
     - type: after-response
       code: |-
         const body = res.body;
-        bru.setEnvVar("session_id", body[0].id);
+        bru.setEnvVar("position_driver", body[0].id);
+        bru.setEnvVar("dnf_driver", body[1].id)
 
 settings:
   encodeUrl: true
