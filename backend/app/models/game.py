@@ -22,7 +22,7 @@ class Game(SQLModel, table=True):
     created_by: uuid.UUID = Field(foreign_key="user.id", nullable=False)
     invite_code: str = Field(default_factory=create_invite_code, unique=True)
 
-    users: list["User"] = Relationship(back_populates="games", link_model=GameUser)
+    members: list["User"] = Relationship(back_populates="games", link_model=GameUser)
 
 
 class GameCreate(SQLModel):
@@ -39,3 +39,7 @@ class GamePublic(SQLModel):
     created_at: datetime
     created_by: uuid.UUID
     invite_code: str
+
+
+class GamePublicWithMembers(GamePublic):
+    members: list[uuid.UUID]

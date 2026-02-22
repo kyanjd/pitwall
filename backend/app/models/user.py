@@ -18,7 +18,7 @@ class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str
 
-    games: list["Game"] = Relationship(back_populates="users", link_model=GameUser)
+    games: list["Game"] = Relationship(back_populates="members", link_model=GameUser)
 
 
 class UserCreate(UserBase):

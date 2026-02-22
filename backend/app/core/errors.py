@@ -20,3 +20,8 @@ class NotFoundError(BaseAppError):
 class UnauthorizedError(BaseAppError):
     status_code = 401
     error_type = "unauthorized"
+
+
+class ForbiddenError(BaseAppError):
+    status_code = 403
+    error_type = "forbidden"
