@@ -1,19 +1,15 @@
 info:
-  name: 01_register_user
+  name: login
   type: http
-  seq: 1
+  seq: 3
 
 http:
   method: POST
-  url: "{{base_url}}/user/"
-  headers:
-    - name: Content-Type
-      value: application/json
+  url: "{{base_url}}/auth/login"
   body:
     type: json
     data: |-
       {
-        "name": "Test Joiner",
         "email": "join+{{random}}@example.com",
         "password": "joinpassword"
       }
@@ -21,8 +17,10 @@ http:
 
 runtime:
   scripts:
-    - type: before-request
-      code: bru.setEnvVar("random", Date.now());
+    - type: after-response
+      code: |-
+        const body = res.body;
+        bru.setEnvVar("join_access_token", body.access_token);
 
 settings:
   encodeUrl: true
