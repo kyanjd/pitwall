@@ -2,8 +2,9 @@ import uuid
 
 from sqlmodel import Session, select
 
-from app.core.errors import NotFoundError
+from app.core.errors import ForbiddenError, NotFoundError
 from app.models.game import Game, GameCreate, GameUser
+from app.models.user import User, UserPublic
 
 
 def create_game(*, session: Session, game_create: GameCreate, created_by: uuid.UUID) -> Game:
@@ -38,3 +39,36 @@ def join_game(*, session: Session, invite_code: str, user_id: uuid.UUID) -> Game
 def add_user_to_game(*, session: Session, game_id: uuid.UUID, user_id: uuid.UUID) -> None:
     game_user = GameUser(game_id=game_id, user_id=user_id)
     session.add(game_user)
+
+
+def get_game_by_id(*, session: Session, game_id: uuid.UUID, user_id: uuid.UUID) -> Game:
+    game = session.get(Game, game_id)
+    if not game:
+        raise NotFoundError(f"Game {game_id} not found")
+    is_member = session.get(GameUser, (game.id, user_id))
+    if not is_member:
+        raise ForbiddenError(f"User {user_id} is not a member of game {game_id}")
+    return game
+
+
+def get_game_by_id_with_members(
+    *, session: Session, game_id: uuid.UUID, user_id: uuid.UUID
+) -> tuple[Game, list[UserPublic]]:
+    game = get_game_by_id(session=session, game_id=game_id, user_id=user_id)
+    game_users = session.exec(select(GameUser).where(GameUser.game_id == game_id)).all()
+    members = []
+    for game_user in game_users:
+        user = session.get(User, game_user.user_id)
+        if user:
+            members.append(UserPublic(name=user.name, email=user.email, id=user.id))
+    return game, members
+
+
+def get_games_by_user(*, session: Session, user_id: uuid.UUID) -> list[Game]:
+    game_users = session.exec(select(GameUser).where(GameUser.user_id == user_id)).all()
+    games = []
+    for game_user in game_users:
+        game = session.get(Game, game_user.game_id)
+        if game:
+            games.append(game)
+    return games
