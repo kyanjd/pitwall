@@ -2,8 +2,11 @@ import uuid
 
 from sqlmodel import Session, select
 
+from app import crud
 from app.core.errors import NotFoundError
+from app.models.f1 import Result
 from app.models.prediction import Prediction, PredictionCreate
+from app.services.score import Scorer
 
 
 def upsert_prediction(
@@ -63,3 +66,19 @@ def get_prediction_for_user_and_session(
     if not prediction:
         raise NotFoundError(f"No prediction found for game {game_id}, session {f1session_id} and user {user_id}")
     return prediction
+
+
+def score_prediction(*, session: Session, prediction: Prediction) -> int:
+    scorer = Scorer()
+
+    position_result = crud.f1.get_result_by_f1session_and_driver(
+        session=session, f1session_id=prediction.f1session_id, driver_id=prediction.position_driver_id
+    )
+    position_score = scorer.score_position(
+        actual_position=position_result.position, predicted_position=prediction.position
+    )
+
+    dnf_result = crud.f1.get_result_by_f1session_and_driver(
+        session=session, f1session_id=prediction.f1session_id, driver_id=prediction.dnf_driver_id
+    )
+    dnf_score = scorer.score_dnf(predicted_driver=prediction.dnf_driver_id)

@@ -16,6 +16,7 @@ class Result(SQLModel, table=True):
     status: Optional[str] = Field(nullable=True)
     grid: Optional[str] = Field(nullable=True)
     laps: Optional[int] = Field(nullable=True)
+    dnf_order: Optional[int] = Field(nullable=True)
 
     driver: Optional["Driver"] = Relationship(back_populates="results")
     constructor: Optional["Constructor"] = Relationship(back_populates="results")

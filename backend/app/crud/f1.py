@@ -1,5 +1,8 @@
+import uuid
+
 from sqlmodel import Session, select
 
+from app.core.errors import NotFoundError
 from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
 
 
@@ -90,6 +93,24 @@ def upsert_result(*, session: Session, result: Result) -> Result:
     else:
         session.add(result)
         return result
+
+
+def get_result_by_f1session_and_driver(*, session: Session, f1session_id: uuid.UUID, driver_id: uuid.UUID) -> Result:
+    statement = select(Result).where(Result.f1session_id == f1session_id, Result.driver_id == driver_id)
+    result = session.exec(statement).first()
+    if not result:
+        raise NotFoundError(f"Result not found for session {f1session_id} and driver {driver_id}")
+    return result
+
+
+def get_first_dnf_by_f1session(*, session: Session, f1session_id: uuid.UUID) -> Driver | None:
+    statement = (
+        select(Result)
+        .where(Result.f1session_id == f1session_id, Result.status != "Finished")
+        .order_by(Result.laps.asc())
+    )
+    result = session.exec(statement).first()
+    return result.driver if result else None
 
 
 def read_result_test(*, session: Session):
