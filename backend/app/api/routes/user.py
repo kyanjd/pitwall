@@ -10,14 +10,14 @@ router = APIRouter(prefix="/user", tags=["user"])
 
 
 @router.post("/", response_model=UserPublic)
-def create_user(session: CurrentSession, user_create: UserCreate) -> Any:
+def create_user(session: CurrentSession, user_create: UserCreate) -> UserPublic:
     user = crud.user.get_user_by_email(session=session, email=user_create.email)
     if user:
         raise AlreadyExistsError(f"User with email {user_create.email} already exists.")
     user = crud.user.create_user(session=session, user_create=user_create)
-    return user
+    return UserPublic.model_validate(user)
 
 
 @router.get("/me", response_model=UserPublic)
-def get_me(current_user: CurrentUser) -> Any:
-    return current_user
+def get_me(current_user: CurrentUser) -> UserPublic:
+    return UserPublic.model_validate(current_user)
