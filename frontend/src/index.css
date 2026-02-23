@@ -1,0 +1,109 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #0f0f0f;
+  color: #e8e8e8;
+  min-height: 100vh;
+}
+
+/* Layout */
+.container { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; }
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1rem 2rem; background: #1a1a1a; border-bottom: 1px solid #2a2a2a;
+  margin-bottom: 2rem;
+}
+.header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.05em; color: #e10600; }
+.header span { font-size: 0.875rem; color: #888; }
+
+/* Cards */
+.card {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+  padding: 1.5rem; margin-bottom: 1rem;
+}
+.card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: #ccc; }
+
+/* Forms */
+.form-group { margin-bottom: 1rem; }
+label { display: block; font-size: 0.8rem; color: #888; margin-bottom: 0.4rem; }
+input {
+  width: 100%; padding: 0.6rem 0.8rem;
+  background: #111; border: 1px solid #333; border-radius: 6px;
+  color: #e8e8e8; font-size: 0.9rem; outline: none;
+}
+input:focus { border-color: #e10600; }
+
+/* Buttons */
+button {
+  padding: 0.6rem 1.2rem; border: none; border-radius: 6px;
+  font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: opacity 0.15s;
+}
+button:hover { opacity: 0.85; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: #e10600; color: #fff; }
+.btn-secondary { background: #2a2a2a; color: #e8e8e8; }
+.btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+
+/* Tabs */
+.tabs { display: flex; gap: 0.25rem; margin-bottom: 1.5rem; border-bottom: 1px solid #2a2a2a; }
+.tab {
+  padding: 0.6rem 1rem; background: none; color: #888;
+  border-bottom: 2px solid transparent; border-radius: 0; margin-bottom: -1px;
+}
+.tab.active { color: #e10600; border-bottom-color: #e10600; }
+
+/* Auth tabs */
+.auth-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+.auth-tab { background: #2a2a2a; color: #888; border-radius: 6px; }
+.auth-tab.active { background: #e10600; color: #fff; }
+
+/* Lists */
+.list-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.8rem 1rem; background: #111; border: 1px solid #2a2a2a;
+  border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.list-item:hover { border-color: #e10600; }
+.list-item.selected { border-color: #e10600; background: #1a0a0a; }
+.list-item-title { font-weight: 500; font-size: 0.9rem; }
+.list-item-sub { font-size: 0.75rem; color: #666; margin-top: 0.2rem; }
+
+/* Driver grid */
+.driver-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; }
+.driver-card {
+  padding: 0.75rem; background: #111; border: 1px solid #2a2a2a;
+  border-radius: 6px; cursor: pointer; text-align: center; transition: border-color 0.15s;
+}
+.driver-card:hover { border-color: #555; }
+.driver-card.selected { border-color: #e10600; background: #1a0a0a; }
+.driver-code { font-size: 1rem; font-weight: 700; font-family: monospace; }
+.driver-name { font-size: 0.7rem; color: #888; margin-top: 0.2rem; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 0.75rem; color: #666; padding: 0.5rem 0.75rem; border-bottom: 1px solid #2a2a2a; }
+td { padding: 0.75rem; border-bottom: 1px solid #1e1e1e; font-size: 0.875rem; }
+tr:last-child td { border-bottom: none; }
+.rank { color: #666; font-size: 0.8rem; width: 2rem; }
+.score-highlight { color: #e10600; font-weight: 700; }
+.you-badge {
+  display: inline-block; font-size: 0.65rem; background: #e10600;
+  color: #fff; border-radius: 4px; padding: 0.1rem 0.4rem; margin-left: 0.5rem;
+}
+
+/* Misc */
+.error { color: #ff6b6b; font-size: 0.8rem; margin-top: 0.5rem; }
+.success { color: #51cf66; font-size: 0.8rem; margin-top: 0.5rem; }
+.empty { color: #555; text-align: center; padding: 2rem; font-size: 0.875rem; }
+.invite-code {
+  font-family: monospace; font-size: 1.1rem; letter-spacing: 0.15em;
+  background: #111; padding: 0.5rem 1rem; border-radius: 6px; color: #e10600;
+}
+.row { display: flex; gap: 0.75rem; align-items: flex-start; }
+.row > * { flex: 1; }
+section-title { display: block; font-size: 0.75rem; color: #666; margin-bottom: 0.5rem; font-weight: 500; }
+.select-label { font-size: 0.75rem; color: #888; margin-bottom: 0.5rem; }
+.predict-section { margin-bottom: 1.5rem; }
+.predict-section h3 { font-size: 0.8rem; color: #888; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
