@@ -78,13 +78,10 @@ export async function register(name: string, email: string, password: string): P
 }
 
 export async function login(email: string, password: string): Promise<Token> {
-  const form = new URLSearchParams();
-  form.append('username', email);
-  form.append('password', password);
   const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
   });
   return handle(res);
 }

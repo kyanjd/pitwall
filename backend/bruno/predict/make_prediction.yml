@@ -6,6 +6,9 @@ info:
 http:
   method: POST
   url: "{{base_url}}/game/{{game_id}}/predict"
+  headers:
+    - name: Authorization
+      value: Bearer {{access_token}}
   body:
     type: json
     data: |-
