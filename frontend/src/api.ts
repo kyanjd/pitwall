@@ -54,6 +54,13 @@ function auth(token: string) {
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
+    // FastAPI 422 returns detail as an array of validation errors
+    if (Array.isArray(body.detail)) {
+      const msg = body.detail.map((e: { msg?: string; loc?: string[] }) =>
+        `${e.loc?.slice(1).join('.')}: ${e.msg}`
+      ).join(', ');
+      throw new Error(msg || `Error ${res.status}`);
+    }
     throw new Error(body.message || body.detail || `Error ${res.status}`);
   }
   return res.json() as Promise<T>;
