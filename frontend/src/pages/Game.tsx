@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
   GamePublic, F1SessionPublic, Driver, MemberScore, PredictionPublic,
   getSeasons, getSessions, getDrivers, predict, getLeaderboard,
-  getMyPrediction, getMembers, getGamePredictions,
+  getMyPrediction, getMembers, getGamePredictions, setFirstDnf,
 } from '../api';
 
 interface Props {
@@ -37,6 +37,12 @@ export default function GamePage({ token, game, currentUserId }: Props) {
   const [predictError, setPredictError] = useState('');
   const [predictSuccess, setPredictSuccess] = useState(false);
 
+  // DNF override (owner only)
+  const [dnfOverrideDriverId, setDnfOverrideDriverId] = useState('');
+  const [settingDnf, setSettingDnf] = useState(false);
+  const [dnfOverrideSuccess, setDnfOverrideSuccess] = useState(false);
+  const [dnfOverrideError, setDnfOverrideError] = useState('');
+
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<MemberScore[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -58,10 +64,18 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     setSessions([]);
     setSelectedSession(null);
     getSessions(token, selectedSeason)
-      .then(all => setSessions(all.filter(s => s.type === 'Race')))
+      .then(all => {
+        const races = all.filter(s => s.type === 'Race');
+        setSessions(races);
+        const savedId = localStorage.getItem(`pitwall_session_${game.id}`);
+        if (savedId) {
+          const saved = races.find(s => s.id === savedId);
+          if (saved) setSelectedSession(saved);
+        }
+      })
       .catch(() => {})
       .finally(() => setLoadingSessions(false));
-  }, [token, selectedSeason]);
+  }, [token, selectedSeason, game.id]);
 
   // Load drivers + existing prediction when a session is selected
   useEffect(() => {
@@ -71,6 +85,9 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     setPosDriverId('');
     setDnfDriverId('');
     setExistingPrediction(null);
+    setDnfOverrideDriverId('');
+    setDnfOverrideSuccess(false);
+    setDnfOverrideError('');
 
     const loadDrivers = getDrivers(token, selectedSession.id)
       .then(setDrivers)
@@ -110,9 +127,25 @@ export default function GamePage({ token, game, currentUserId }: Props) {
 
   function handleSelectSession(session: F1SessionPublic) {
     setSelectedSession(session);
+    localStorage.setItem(`pitwall_session_${game.id}`, session.id);
     setPredictSuccess(false);
     setPredictError('');
     setTab('predict');
+  }
+
+  async function handleSetDnf() {
+    if (!selectedSession || !dnfOverrideDriverId) return;
+    setSettingDnf(true);
+    setDnfOverrideSuccess(false);
+    setDnfOverrideError('');
+    try {
+      await setFirstDnf(token, game.id, selectedSession.id, dnfOverrideDriverId);
+      setDnfOverrideSuccess(true);
+    } catch (err: unknown) {
+      setDnfOverrideError(err instanceof Error ? err.message : 'Failed to set DNF');
+    } finally {
+      setSettingDnf(false);
+    }
   }
 
   async function handlePredict() {
@@ -196,6 +229,35 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                 <span style={{ color: '#555', fontSize: '0.75rem' }}>Predict →</span>
               </div>
             ))
+          )}
+
+          {currentUserId === game.created_by && selectedSession && (
+            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2a2a2a' }}>
+              <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.75rem' }}>
+                Override first DNF — {selectedSession.race_name}
+              </p>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select
+                  value={dnfOverrideDriverId}
+                  onChange={e => setDnfOverrideDriverId(e.target.value)}
+                  style={{ flex: 1 }}
+                >
+                  <option value="">Select driver…</option>
+                  {drivers.map(d => (
+                    <option key={d.id} value={d.id}>{d.code} — {d.first_name} {d.last_name}</option>
+                  ))}
+                </select>
+                <button
+                  className="btn-primary btn-sm"
+                  disabled={!dnfOverrideDriverId || settingDnf}
+                  onClick={handleSetDnf}
+                >
+                  {settingDnf ? 'Saving…' : 'Set DNF'}
+                </button>
+              </div>
+              {dnfOverrideSuccess && <p className="success" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>DNF override saved.</p>}
+              {dnfOverrideError && <p className="error" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>{dnfOverrideError}</p>}
+            </div>
           )}
         </div>
       )}

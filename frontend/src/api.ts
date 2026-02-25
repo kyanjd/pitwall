@@ -201,3 +201,12 @@ export async function getLeaderboard(token: string, gameId: string): Promise<Mem
   const res = await fetch(`${BASE}/game/${gameId}/scores`, { headers: auth(token) });
   return handle(res);
 }
+
+export async function setFirstDnf(token: string, gameId: string, sessionId: string, driverId: string): Promise<void> {
+  const res = await fetch(`${BASE}/game/${gameId}/f1session/${sessionId}/dnf`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...auth(token) },
+    body: JSON.stringify({ driver_id: driverId }),
+  });
+  if (!res.ok) await handle(res);
+}

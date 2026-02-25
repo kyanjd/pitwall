@@ -113,6 +113,21 @@ def get_first_dnf_by_f1session(*, session: Session, f1session_id: uuid.UUID) -> 
     return result.driver if result else None
 
 
+def set_first_dnf(*, session: Session, f1session_id: uuid.UUID, driver_id: uuid.UUID) -> None:
+    results = list(session.exec(select(Result).where(Result.f1session_id == f1session_id)).all())
+    for r in results:
+        r.dnf_order = None
+        session.add(r)
+    target = session.exec(
+        select(Result).where(Result.f1session_id == f1session_id, Result.driver_id == driver_id)
+    ).first()
+    if not target:
+        raise NotFoundError(f"Result not found for driver {driver_id} in session {f1session_id}")
+    target.dnf_order = 1
+    session.add(target)
+    session.commit()
+
+
 def get_drivers_for_session(*, session: Session, f1session_id: uuid.UUID) -> list[Driver]:
     statement = select(Driver).join(Result).where(Result.f1session_id == f1session_id)
     drivers = list(session.exec(statement).all())

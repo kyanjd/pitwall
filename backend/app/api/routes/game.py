@@ -2,10 +2,12 @@ import uuid
 
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
+from app.core.errors import ForbiddenError
 from app.models.game import GameCreate, GameJoin, GamePublic, GamePublicWithMembers
 from app.models.prediction import MemberScore, PredictionCreate, PredictionPublic, SessionScores
 from app.models.user import UserPublic
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -115,3 +117,19 @@ def get_game_leaderboard(
     session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID
 ) -> list[MemberScore]:
     return crud.prediction.score_game(session=session, game_id=game_id)
+
+
+class DnfOverride(BaseModel):
+    driver_id: uuid.UUID
+
+
+@router.patch("/{game_id}/f1session/{f1session_id}/dnf", status_code=204)
+def set_first_dnf(
+    session: CurrentSession, current_user: CurrentUser,
+    game_id: uuid.UUID, f1session_id: uuid.UUID,
+    body: DnfOverride,
+) -> None:
+    game = crud.game.get_game_by_id(session=session, game_id=game_id, user_id=current_user.id)
+    if game.created_by != current_user.id:
+        raise ForbiddenError("Only the game owner can override DNF results")
+    crud.f1.set_first_dnf(session=session, f1session_id=f1session_id, driver_id=body.driver_id)
