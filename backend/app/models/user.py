@@ -27,3 +27,8 @@ class UserCreate(UserBase):
 
 class UserPublic(UserBase):
     id: uuid.UUID
+
+
+class PasswordChange(SQLModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=64)

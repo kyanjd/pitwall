@@ -93,6 +93,16 @@ tr:last-child td { border-bottom: none; }
   color: #fff; border-radius: 4px; padding: 0.1rem 0.4rem; margin-left: 0.5rem;
 }
 
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+.modal {
+  background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+  padding: 1.5rem; width: 100%; max-width: 360px;
+}
+
 /* Misc */
 .error { color: #ff6b6b; font-size: 0.8rem; margin-top: 0.5rem; }
 .success { color: #51cf66; font-size: 0.8rem; margin-top: 0.5rem; }

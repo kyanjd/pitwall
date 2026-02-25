@@ -2,9 +2,10 @@ from typing import Any
 
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
-from app.core.errors import AlreadyExistsError
-from app.models.user import UserCreate, UserPublic
-from fastapi import APIRouter
+from app.core import security
+from app.core.errors import AlreadyExistsError, UnauthorizedError
+from app.models.user import PasswordChange, UserCreate, UserPublic
+from fastapi import APIRouter, Response
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -21,3 +22,14 @@ def create_user(session: CurrentSession, user_create: UserCreate) -> UserPublic:
 @router.get("/me", response_model=UserPublic)
 def get_me(current_user: CurrentUser) -> UserPublic:
     return UserPublic.model_validate(current_user)
+
+
+@router.put("/me/password", status_code=204)
+def change_password(
+    session: CurrentSession, current_user: CurrentUser, password_change: PasswordChange
+) -> Response:
+    if not security.verify_password(password_change.current_password, current_user.hashed_password):
+        raise UnauthorizedError("Current password is incorrect.")
+    new_hash = security.get_password_hash(password_change.new_password)
+    crud.user.update_password(session=session, user=current_user, new_hashed_password=new_hash)
+    return Response(status_code=204)

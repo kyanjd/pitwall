@@ -25,3 +25,9 @@ def get_user_by_email(*, session: Session, email: str) -> User | None:
 
 def get_user_by_id(*, session: Session, user_id: uuid.UUID) -> User | None:
     return session.get(User, user_id)
+
+
+def update_password(*, session: Session, user: User, new_hashed_password: str) -> None:
+    user.hashed_password = new_hashed_password
+    session.add(user)
+    session.commit()

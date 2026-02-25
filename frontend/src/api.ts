@@ -172,6 +172,15 @@ export async function getMyPrediction(token: string, gameId: string, sessionId: 
   return res.json();
 }
 
+export async function changePassword(token: string, current_password: string, new_password: string): Promise<void> {
+  const res = await fetch(`${BASE}/user/me/password`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...auth(token) },
+    body: JSON.stringify({ current_password, new_password }),
+  });
+  if (!res.ok) await handle(res); // handle throws on error; 204 has no body to parse
+}
+
 export async function getMembers(token: string, gameId: string): Promise<UserPublic[]> {
   const res = await fetch(`${BASE}/game/${gameId}/members/users`, { headers: auth(token) });
   return handle(res);
