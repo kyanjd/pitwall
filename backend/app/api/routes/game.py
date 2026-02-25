@@ -4,6 +4,7 @@ from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
 from app.models.game import GameCreate, GameJoin, GamePublic, GamePublicWithMembers
 from app.models.prediction import MemberScore, PredictionCreate, PredictionPublic, SessionScores
+from app.models.user import UserPublic
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/game", tags=["game"])
@@ -42,6 +43,12 @@ def get_game_members(session: CurrentSession, current_user: CurrentUser, game_id
         **GamePublic.model_validate(game).model_dump(),
         members=[member.id for member in members],
     )
+
+
+@router.get("/{game_id}/members/users", response_model=list[UserPublic])
+def get_game_member_users(session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID) -> list[UserPublic]:
+    _, members = crud.game.get_game_by_id_with_members(session=session, game_id=game_id, user_id=current_user.id)
+    return [UserPublic.model_validate(m) for m in members]
 
 
 ## Prediction routes (all within game)

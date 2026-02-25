@@ -45,6 +45,16 @@ export interface MemberScore {
   total_score: number;
 }
 
+export interface PredictionPublic {
+  id: string;
+  game_id: string;
+  user_id: string;
+  f1session_id: string;
+  position: number;
+  position_driver_id: string;
+  dnf_driver_id: string;
+}
+
 // --- Helpers ---
 
 function auth(token: string) {
@@ -149,6 +159,22 @@ export async function predict(
     body: JSON.stringify({ f1session_id, position_driver_id, dnf_driver_id, position: 10 }),
   });
   await handle(res);
+}
+
+export async function getGamePredictions(token: string, gameId: string): Promise<PredictionPublic[]> {
+  const res = await fetch(`${BASE}/game/${gameId}/predictions`, { headers: auth(token) });
+  return handle(res);
+}
+
+export async function getMyPrediction(token: string, gameId: string, sessionId: string): Promise<PredictionPublic | null> {
+  const res = await fetch(`${BASE}/game/${gameId}/f1session/${sessionId}/me`, { headers: auth(token) });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function getMembers(token: string, gameId: string): Promise<UserPublic[]> {
+  const res = await fetch(`${BASE}/game/${gameId}/members/users`, { headers: auth(token) });
+  return handle(res);
 }
 
 // --- Leaderboard ---

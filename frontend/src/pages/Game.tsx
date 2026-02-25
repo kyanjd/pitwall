@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import {
-  GamePublic, F1SessionPublic, Driver, MemberScore,
+  GamePublic, F1SessionPublic, Driver, MemberScore, PredictionPublic,
   getSeasons, getSessions, getDrivers, predict, getLeaderboard,
+  getMyPrediction, getMembers, getGamePredictions,
 } from '../api';
 
 interface Props {
@@ -31,6 +32,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [posDriverId, setPosDriverId] = useState('');
   const [dnfDriverId, setDnfDriverId] = useState('');
+  const [existingPrediction, setExistingPrediction] = useState<PredictionPublic | null>(null);
   const [predicting, setPredicting] = useState(false);
   const [predictError, setPredictError] = useState('');
   const [predictSuccess, setPredictSuccess] = useState(false);
@@ -38,6 +40,8 @@ export default function GamePage({ token, game, currentUserId }: Props) {
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<MemberScore[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
+  const [memberNames, setMemberNames] = useState<Record<string, string>>({});
+  const [predictionCounts, setPredictionCounts] = useState<Record<string, number>>({});
 
   // Load seasons on mount
   useEffect(() => {
@@ -54,32 +58,54 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     setSessions([]);
     setSelectedSession(null);
     getSessions(token, selectedSeason)
-      .then(setSessions)
+      .then(all => setSessions(all.filter(s => s.type === 'Race')))
       .catch(() => {})
       .finally(() => setLoadingSessions(false));
   }, [token, selectedSeason]);
 
-  // Load drivers when a session is selected and we go to predict tab
+  // Load drivers + existing prediction when a session is selected
   useEffect(() => {
     if (!selectedSession) return;
     setLoadingDrivers(true);
     setDrivers([]);
     setPosDriverId('');
     setDnfDriverId('');
-    getDrivers(token, selectedSession.id)
-      .then(setDrivers)
-      .catch(() => {})
-      .finally(() => setLoadingDrivers(false));
-  }, [token, selectedSession]);
+    setExistingPrediction(null);
 
-  // Load leaderboard when switching to that tab
+    const loadDrivers = getDrivers(token, selectedSession.id)
+      .then(setDrivers)
+      .catch(() => {});
+
+    const loadPrediction = getMyPrediction(token, game.id, selectedSession.id)
+      .then(pred => {
+        if (pred) {
+          setExistingPrediction(pred);
+          setPosDriverId(pred.position_driver_id);
+          setDnfDriverId(pred.dnf_driver_id);
+        }
+      });
+
+    Promise.all([loadDrivers, loadPrediction]).finally(() => setLoadingDrivers(false));
+  }, [token, selectedSession, game.id]);
+
+  // Load leaderboard + member names when switching to that tab
   useEffect(() => {
     if (tab !== 'leaderboard') return;
     setLoadingLeaderboard(true);
-    getLeaderboard(token, game.id)
-      .then(setLeaderboard)
-      .catch(() => {})
-      .finally(() => setLoadingLeaderboard(false));
+
+    Promise.all([
+      getLeaderboard(token, game.id),
+      getMembers(token, game.id),
+      getGamePredictions(token, game.id),
+    ]).then(([scores, members, predictions]) => {
+      setLeaderboard(scores);
+      const names: Record<string, string> = {};
+      members.forEach(m => { names[m.id] = m.name; });
+      setMemberNames(names);
+      const counts: Record<string, number> = {};
+      predictions.forEach(p => { counts[p.user_id] = (counts[p.user_id] ?? 0) + 1; });
+      setPredictionCounts(counts);
+    }).catch(() => {}).finally(() => setLoadingLeaderboard(false));
   }, [tab, token, game.id]);
 
   function handleSelectSession(session: F1SessionPublic) {
@@ -187,6 +213,11 @@ export default function GamePage({ token, game, currentUserId }: Props) {
             <p className="empty">No drivers found for this session. Results may not be ingested yet.</p>
           ) : (
             <>
+              {existingPrediction && (
+                <p style={{ fontSize: '0.8rem', color: '#51cf66', marginBottom: '1.25rem' }}>
+                  You've already predicted this session — your picks are shown below. Submitting will update them.
+                </p>
+              )}
               <div className="predict-section">
                 <h3>Who finishes 10th?</h3>
                 <div className="driver-grid">
@@ -255,6 +286,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                 <tr>
                   <th>#</th>
                   <th>Player</th>
+                  <th>Predictions</th>
                   <th>Position pts</th>
                   <th>DNF pts</th>
                   <th>Total</th>
@@ -267,14 +299,10 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                     <tr key={row.user_id}>
                       <td className="rank">{i + 1}</td>
                       <td>
-                        {isMe ? (
-                          <>You <span className="you-badge">YOU</span></>
-                        ) : (
-                          <span style={{ color: '#aaa', fontFamily: 'monospace', fontSize: '0.8rem' }}>
-                            {shortId(row.user_id)}…
-                          </span>
-                        )}
+                        {memberNames[row.user_id] ?? shortId(row.user_id)}
+                        {isMe && <span className="you-badge">YOU</span>}
                       </td>
+                      <td style={{ color: '#888' }}>{predictionCounts[row.user_id] ?? 0}</td>
                       <td>{row.position_score}</td>
                       <td>{row.dnf_score}</td>
                       <td className="score-highlight">{row.total_score}</td>
