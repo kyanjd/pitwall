@@ -43,6 +43,9 @@ export default function GamePage({ token, game, currentUserId }: Props) {
   const [dnfOverrideSuccess, setDnfOverrideSuccess] = useState(false);
   const [dnfOverrideError, setDnfOverrideError] = useState('');
 
+  // Predicted sessions (for session list indicators)
+  const [predictedSessionIds, setPredictedSessionIds] = useState<Set<string>>(new Set());
+
   // Leaderboard
   const [leaderboard, setLeaderboard] = useState<MemberScore[]>([]);
   const [loadingLeaderboard, setLoadingLeaderboard] = useState(false);
@@ -105,6 +108,14 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     Promise.all([loadDrivers, loadPrediction]).finally(() => setLoadingDrivers(false));
   }, [token, selectedSession, game.id]);
 
+  // Load which sessions the current user has predicted
+  useEffect(() => {
+    getGamePredictions(token, game.id).then(predictions => {
+      const ids = new Set(predictions.filter(p => p.user_id === currentUserId).map(p => p.f1session_id));
+      setPredictedSessionIds(ids);
+    }).catch(() => {});
+  }, [token, game.id, currentUserId]);
+
   // Load leaderboard + member names when switching to that tab
   useEffect(() => {
     if (tab !== 'leaderboard') return;
@@ -160,6 +171,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     try {
       await predict(token, game.id, selectedSession.id, posDriverId, dnfDriverId);
       setPredictSuccess(true);
+      setPredictedSessionIds(prev => new Set([...prev, selectedSession.id]));
     } catch (err: unknown) {
       setPredictError(err instanceof Error ? err.message : 'Failed to submit prediction');
     } finally {
@@ -216,48 +228,24 @@ export default function GamePage({ token, game, currentUserId }: Props) {
           ) : sessions.length === 0 ? (
             <p className="empty">No sessions found for {selectedSeason}. Make sure the backend has ingested F1 data.</p>
           ) : (
-            sessions.map(session => (
-              <div
-                key={session.id}
-                className={`list-item ${selectedSession?.id === session.id ? 'selected' : ''}`}
-                onClick={() => handleSelectSession(session)}
-              >
-                <div>
-                  <div className="list-item-title">{sessionLabel(session)}</div>
-                  <div className="list-item-sub">{new Date(session.date).toLocaleDateString()}</div>
+            sessions.map(session => {
+              const predicted = predictedSessionIds.has(session.id);
+              return (
+                <div
+                  key={session.id}
+                  className={`list-item ${selectedSession?.id === session.id ? 'selected' : ''}`}
+                  onClick={() => handleSelectSession(session)}
+                >
+                  <div>
+                    <div className="list-item-title">{sessionLabel(session)}</div>
+                    <div className="list-item-sub">{new Date(session.date).toLocaleDateString()}</div>
+                  </div>
+                  {predicted
+                    ? <span style={{ color: '#51cf66', fontSize: '0.75rem' }}>✓ Predicted</span>
+                    : <span style={{ color: '#555', fontSize: '0.75rem' }}>Predict →</span>}
                 </div>
-                <span style={{ color: '#555', fontSize: '0.75rem' }}>Predict →</span>
-              </div>
-            ))
-          )}
-
-          {currentUserId === game.created_by && selectedSession && (
-            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #2a2a2a' }}>
-              <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.75rem' }}>
-                Override first DNF — {selectedSession.race_name}
-              </p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <select
-                  value={dnfOverrideDriverId}
-                  onChange={e => setDnfOverrideDriverId(e.target.value)}
-                  style={{ flex: 1 }}
-                >
-                  <option value="">Select driver…</option>
-                  {drivers.map(d => (
-                    <option key={d.id} value={d.id}>{d.code} — {d.first_name} {d.last_name}</option>
-                  ))}
-                </select>
-                <button
-                  className="btn-primary btn-sm"
-                  disabled={!dnfOverrideDriverId || settingDnf}
-                  onClick={handleSetDnf}
-                >
-                  {settingDnf ? 'Saving…' : 'Set DNF'}
-                </button>
-              </div>
-              {dnfOverrideSuccess && <p className="success" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>DNF override saved.</p>}
-              {dnfOverrideError && <p className="error" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>{dnfOverrideError}</p>}
-            </div>
+              );
+            })
           )}
         </div>
       )}
@@ -329,6 +317,33 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                   {' · '}
                   DNF: <strong style={{ color: '#e8e8e8' }}>{drivers.find(d => d.id === dnfDriverId)?.code}</strong>
                 </p>
+              )}
+
+              {currentUserId === game.created_by && (
+                <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #2a2a2a' }}>
+                  <p style={{ fontSize: '0.75rem', color: '#666', marginBottom: '0.75rem' }}>Override first DNF result</p>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <select
+                      value={dnfOverrideDriverId}
+                      onChange={e => setDnfOverrideDriverId(e.target.value)}
+                      style={{ flex: 1 }}
+                    >
+                      <option value="">Select driver…</option>
+                      {drivers.map(d => (
+                        <option key={d.id} value={d.id}>{d.code} — {d.first_name} {d.last_name}</option>
+                      ))}
+                    </select>
+                    <button
+                      className="btn-primary btn-sm"
+                      disabled={!dnfOverrideDriverId || settingDnf}
+                      onClick={handleSetDnf}
+                    >
+                      {settingDnf ? 'Saving…' : 'Set DNF'}
+                    </button>
+                  </div>
+                  {dnfOverrideSuccess && <p className="success" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>DNF override saved.</p>}
+                  {dnfOverrideError && <p className="error" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>{dnfOverrideError}</p>}
+                </div>
               )}
             </>
           )}
