@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react';
-import { getMe, changePassword, UserPublic, GamePublic } from './api';
+import { getMe, updateName, changePassword, UserPublic, GamePublic } from './api';
 import AuthPage from './pages/Auth';
 import GamesPage from './pages/Games';
 import GamePage from './pages/Game';
@@ -11,9 +11,15 @@ export default function App() {
   const [user, setUser] = useState<UserPublic | null>(null);
   const [view, setView] = useState<View>(token ? 'games' : 'auth');
   const [selectedGame, setSelectedGame] = useState<GamePublic | null>(null);
+  const [showAccount, setShowAccount] = useState(false);
 
-  // Change password modal
-  const [showPwModal, setShowPwModal] = useState(false);
+  // Name
+  const [name, setName] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [nameSuccess, setNameSuccess] = useState(false);
+  const [nameLoading, setNameLoading] = useState(false);
+
+  // Password
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
@@ -23,9 +29,7 @@ export default function App() {
 
   useEffect(() => {
     if (!token) return;
-    getMe(token)
-      .then(setUser)
-      .catch(() => handleLogout());
+    getMe(token).then(setUser).catch(() => handleLogout());
   }, [token]);
 
   function handleLogin(newToken: string) {
@@ -36,26 +40,36 @@ export default function App() {
 
   function handleLogout() {
     localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    setView('auth');
-    setSelectedGame(null);
+    setToken(null); setUser(null);
+    setView('auth'); setSelectedGame(null);
   }
 
-  function handleSelectGame(game: GamePublic) {
-    setSelectedGame(game);
-    setView('game');
-  }
-
-  function openPwModal() {
+  function openAccount() {
+    setName(user?.name ?? '');
+    setNameError(''); setNameSuccess(false);
     setCurrentPw(''); setNewPw(''); setConfirmPw('');
     setPwError(''); setPwSuccess(false);
-    setShowPwModal(true);
+    setShowAccount(true);
+  }
+
+  async function handleUpdateName(e: FormEvent) {
+    e.preventDefault();
+    if (!token) return;
+    setNameLoading(true); setNameError(''); setNameSuccess(false);
+    try {
+      const updated = await updateName(token, name);
+      setUser(updated);
+      setNameSuccess(true);
+    } catch (err: unknown) {
+      setNameError(err instanceof Error ? err.message : 'Failed to update name');
+    } finally {
+      setNameLoading(false);
+    }
   }
 
   async function handleChangePassword(e: FormEvent) {
     e.preventDefault();
-    if (newPw !== confirmPw) { setPwError('New passwords do not match.'); return; }
+    if (newPw !== confirmPw) { setPwError('Passwords do not match.'); return; }
     if (!token) return;
     setPwLoading(true); setPwError(''); setPwSuccess(false);
     try {
@@ -79,33 +93,46 @@ export default function App() {
         <h1>PITWALL</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {view === 'game' && (
-            <button className="btn-secondary btn-sm" onClick={() => setView('games')}>
-              ← Games
-            </button>
+            <button className="btn-secondary btn-sm" onClick={() => setView('games')}>← Games</button>
           )}
           <span>{user?.name ?? user?.email}</span>
-          <button className="btn-secondary btn-sm" onClick={openPwModal}>
-            Password
-          </button>
-          <button className="btn-secondary btn-sm" onClick={handleLogout}>
-            Log out
-          </button>
+          <button className="btn-secondary btn-sm" onClick={openAccount}>Account</button>
+          <button className="btn-secondary btn-sm" onClick={handleLogout}>Log out</button>
         </div>
       </header>
 
       <main className="container">
-        {view === 'games' && (
-          <GamesPage token={token} onSelectGame={handleSelectGame} />
-        )}
+        {view === 'games' && <GamesPage token={token} onSelectGame={g => { setSelectedGame(g); setView('game'); }} />}
         {view === 'game' && selectedGame && (
           <GamePage token={token} game={selectedGame} currentUserId={user?.id ?? ''} />
         )}
       </main>
 
-      {showPwModal && (
-        <div className="modal-backdrop" onClick={() => setShowPwModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h2 style={{ marginBottom: '1.25rem', fontSize: '1rem' }}>Change password</h2>
+      {showAccount && (
+        <div className="modal-backdrop" onClick={() => setShowAccount(false)}>
+          <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1rem' }}>Account</h2>
+              <button className="btn-secondary btn-sm" onClick={() => setShowAccount(false)}>✕</button>
+            </div>
+
+            {/* Name */}
+            <p style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Display name</p>
+            <form onSubmit={handleUpdateName} style={{ marginBottom: '1.75rem' }}>
+              <div className="form-group">
+                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Your name" />
+              </div>
+              {nameError && <p className="error">{nameError}</p>}
+              {nameSuccess && <p className="success">Name updated.</p>}
+              <button type="submit" className="btn-primary btn-sm" disabled={nameLoading}>
+                {nameLoading ? 'Saving…' : 'Update name'}
+              </button>
+            </form>
+
+            <hr style={{ border: 'none', borderTop: '1px solid #2a2a2a', marginBottom: '1.75rem' }} />
+
+            {/* Password */}
+            <p style={{ fontSize: '0.7rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.75rem' }}>Change password</p>
             <form onSubmit={handleChangePassword}>
               <div className="form-group">
                 <label>Current password</label>
@@ -121,14 +148,9 @@ export default function App() {
               </div>
               {pwError && <p className="error">{pwError}</p>}
               {pwSuccess && <p className="success">Password updated.</p>}
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-                <button type="submit" className="btn-primary" disabled={pwLoading}>
-                  {pwLoading ? 'Saving…' : 'Update'}
-                </button>
-                <button type="button" className="btn-secondary" onClick={() => setShowPwModal(false)}>
-                  Cancel
-                </button>
-              </div>
+              <button type="submit" className="btn-primary btn-sm" disabled={pwLoading}>
+                {pwLoading ? 'Saving…' : 'Update password'}
+              </button>
             </form>
           </div>
         </div>

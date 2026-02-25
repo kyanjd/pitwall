@@ -31,3 +31,11 @@ def update_password(*, session: Session, user: User, new_hashed_password: str) -
     user.hashed_password = new_hashed_password
     session.add(user)
     session.commit()
+
+
+def update_name(*, session: Session, user: User, name: str) -> User:
+    user.name = name
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user

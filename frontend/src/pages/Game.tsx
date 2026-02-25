@@ -301,6 +301,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                       <td>
                         {memberNames[row.user_id] ?? shortId(row.user_id)}
                         {isMe && <span className="you-badge">YOU</span>}
+                        {row.user_id === game.created_by && <span className="owner-badge">OWNER</span>}
                       </td>
                       <td style={{ color: '#888' }}>{predictionCounts[row.user_id] ?? 0}</td>
                       <td>{row.position_score}</td>

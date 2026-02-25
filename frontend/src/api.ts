@@ -172,6 +172,15 @@ export async function getMyPrediction(token: string, gameId: string, sessionId: 
   return res.json();
 }
 
+export async function updateName(token: string, name: string): Promise<UserPublic> {
+  const res = await fetch(`${BASE}/user/me`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...auth(token) },
+    body: JSON.stringify({ name }),
+  });
+  return handle(res);
+}
+
 export async function changePassword(token: string, current_password: string, new_password: string): Promise<void> {
   const res = await fetch(`${BASE}/user/me/password`, {
     method: 'PUT',
