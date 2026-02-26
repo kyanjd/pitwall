@@ -64,15 +64,24 @@ def get_prediction_for_user_and_session(
     return prediction
 
 
+def session_has_results(*, session: Session, f1session_id: uuid.UUID) -> bool:
+    # position > 0 excludes stub results created by ingest_season_roster (position=0 sentinel)
+    statement = select(Result).where(Result.f1session_id == f1session_id, Result.position > 0)
+    return session.exec(statement).first() is not None
+
+
 def score_prediction(*, session: Session, user_id: uuid.UUID, prediction: Prediction) -> MemberScore:
     scorer = Scorer()
 
-    position_result = crud.f1.get_result_by_f1session_and_driver(
-        session=session, f1session_id=prediction.f1session_id, driver_id=prediction.position_driver_id
-    )
-    position_score = scorer.score_position(
-        actual_position=position_result.position, predicted_position=prediction.position
-    )
+    try:
+        position_result = crud.f1.get_result_by_f1session_and_driver(
+            session=session, f1session_id=prediction.f1session_id, driver_id=prediction.position_driver_id
+        )
+        position_score = scorer.score_position(
+            actual_position=position_result.position, predicted_position=prediction.position
+        )
+    except NotFoundError:
+        position_score = 0
 
     driver = crud.f1.get_first_dnf_by_f1session(session=session, f1session_id=prediction.f1session_id)
     actual_driver = driver.id if driver else None
@@ -91,6 +100,8 @@ def score_game(*, session: Session, game_id: uuid.UUID) -> list[MemberScore]:
     predictions = get_predictions_for_game(session=session, game_id=game_id)
     totals: dict[uuid.UUID, MemberScore] = {}
     for p in predictions:
+        if not session_has_results(session=session, f1session_id=p.f1session_id):
+            continue
         ms = score_prediction(session=session, user_id=p.user_id, prediction=p)
         if p.user_id in totals:
             existing = totals[p.user_id]
