@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   GamePublic, F1SessionPublic, Driver, MemberScore, PredictionPublic,
-  getSeasons, getSessions, getDrivers, predict, getLeaderboard,
+  getSessions, getDrivers, predict, getLeaderboard,
   getMyPrediction, getMembers, getGamePredictions, setFirstDnf,
 } from '../api';
 
@@ -17,12 +17,30 @@ function shortId(id: string) {
   return id.slice(0, 8);
 }
 
+function formatCountdown(targetMs: number, nowMs: number): string {
+  const diff = targetMs - nowMs;
+  if (diff <= 0) return 'Live';
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${s}s`;
+  return `${m}m ${s}s`;
+}
+
 export default function GamePage({ token, game, currentUserId }: Props) {
   const [tab, setTab] = useState<Tab>('sessions');
 
+  // Countdown
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   // Sessions
-  const [seasons, setSeasons] = useState<number[]>([]);
-  const [selectedSeason, setSelectedSeason] = useState<number | null>(null);
+  const [allSessions, setAllSessions] = useState<F1SessionPublic[]>([]);
   const [sessions, setSessions] = useState<F1SessionPublic[]>([]);
   const [selectedSession, setSelectedSession] = useState<F1SessionPublic | null>(null);
   const [loadingSessions, setLoadingSessions] = useState(false);
@@ -52,22 +70,14 @@ export default function GamePage({ token, game, currentUserId }: Props) {
   const [memberNames, setMemberNames] = useState<Record<string, string>>({});
   const [predictionCounts, setPredictionCounts] = useState<Record<string, number>>({});
 
-  // Load seasons on mount
+  // Load sessions for the game's season on mount
   useEffect(() => {
-    getSeasons(token).then(s => {
-      setSeasons(s);
-      if (s.length > 0) setSelectedSeason(s[s.length - 1]); // latest season
-    }).catch(() => {});
-  }, [token]);
-
-  // Load sessions when season changes
-  useEffect(() => {
-    if (!selectedSeason) return;
     setLoadingSessions(true);
     setSessions([]);
     setSelectedSession(null);
-    getSessions(token, selectedSeason)
+    getSessions(token, game.season)
       .then(all => {
+        setAllSessions(all);
         const races = all.filter(s => s.type === 'Race');
         setSessions(races);
         const savedId = localStorage.getItem(`pitwall_session_${game.id}`);
@@ -78,7 +88,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
       })
       .catch(() => {})
       .finally(() => setLoadingSessions(false));
-  }, [token, selectedSeason, game.id]);
+  }, [token, game.id, game.season]);
 
   // Load drivers + existing prediction when a session is selected
   useEffect(() => {
@@ -192,6 +202,38 @@ export default function GamePage({ token, game, currentUserId }: Props) {
         </span>
       </div>
 
+      {/* Countdown */}
+      {(() => {
+        const upcoming = allSessions
+          .filter(s => new Date(s.date).getTime() > now)
+          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        const nextRace = upcoming.find(s => s.type === 'Race');
+        const nextQuali = upcoming.find(s => s.type === 'Qualifying');
+        if (!nextRace && !nextQuali) return null;
+        return (
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
+            {nextQuali && (
+              <div style={{ flex: 1, background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.875rem 1rem' }}>
+                <div style={{ fontSize: '0.65rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>Next Qualifying</div>
+                <div style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '0.35rem' }}>{nextQuali.race_name}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e10600', fontFamily: 'monospace' }}>
+                  {formatCountdown(new Date(nextQuali.date).getTime(), now)}
+                </div>
+              </div>
+            )}
+            {nextRace && (
+              <div style={{ flex: 1, background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.875rem 1rem' }}>
+                <div style={{ fontSize: '0.65rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>Next Race</div>
+                <div style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '0.35rem' }}>{nextRace.race_name}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e10600', fontFamily: 'monospace' }}>
+                  {formatCountdown(new Date(nextRace.date).getTime(), now)}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${tab === 'sessions' ? 'active' : ''}`} onClick={() => setTab('sessions')}>
@@ -208,25 +250,10 @@ export default function GamePage({ token, game, currentUserId }: Props) {
       {/* Sessions tab */}
       {tab === 'sessions' && (
         <div>
-          {/* Season picker */}
-          {seasons.length > 1 && (
-            <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
-              {seasons.map(s => (
-                <button
-                  key={s}
-                  className={selectedSeason === s ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
-                  onClick={() => setSelectedSeason(s)}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-
           {loadingSessions ? (
             <p className="empty">Loading sessions…</p>
           ) : sessions.length === 0 ? (
-            <p className="empty">No sessions found for {selectedSeason}. Make sure the backend has ingested F1 data.</p>
+            <p className="empty">No sessions found for {game.season}. Make sure the backend has ingested F1 data.</p>
           ) : (
             sessions.map(session => {
               const predicted = predictedSessionIds.has(session.id);

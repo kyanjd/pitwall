@@ -18,6 +18,7 @@ class GameUser(SQLModel, table=True):
 class Game(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
+    season: int = Field(nullable=False, index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: uuid.UUID = Field(foreign_key="user.id", nullable=False)
     invite_code: str = Field(default_factory=create_invite_code, unique=True)
@@ -27,6 +28,7 @@ class Game(SQLModel, table=True):
 
 class GameCreate(SQLModel):
     name: str
+    season: int
 
 
 class GameJoin(SQLModel):
@@ -36,6 +38,7 @@ class GameJoin(SQLModel):
 class GamePublic(SQLModel):
     id: uuid.UUID
     name: str
+    season: int
     created_at: datetime
     created_by: uuid.UUID
     invite_code: str

@@ -10,6 +10,7 @@ from app.models.user import User, UserPublic
 def create_game(*, session: Session, game_create: GameCreate, created_by: uuid.UUID) -> Game:
     db_obj = Game(
         name=game_create.name,
+        season=game_create.season,
         created_by=created_by,
     )
     session.add(db_obj)

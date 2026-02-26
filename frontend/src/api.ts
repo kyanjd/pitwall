@@ -16,6 +16,7 @@ export interface Token {
 export interface GamePublic {
   id: string;
   name: string;
+  season: number;
   invite_code: string;
   created_at: string;
   created_by: string;
@@ -108,11 +109,11 @@ export async function getGames(token: string): Promise<GamePublic[]> {
   return handle(res);
 }
 
-export async function createGame(token: string, name: string): Promise<GamePublic> {
+export async function createGame(token: string, name: string, season: number): Promise<GamePublic> {
   const res = await fetch(`${BASE}/game/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...auth(token) },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, season }),
   });
   return handle(res);
 }

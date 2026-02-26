@@ -197,8 +197,6 @@ class Ingestor:
 if __name__ == "__main__":
     with get_session_local() as session:
         ingestor = Ingestor(session=session)
-        # for season in [2025, 2026]:
-        #     ingestor.ingest_results_and_background(season, F1SessionType.RACE)
-        #     ingestor.ingest_results_and_background(season, F1SessionType.QUALIFYING)
-        ingestor.ingest_background(2026)
-        ingestor.ingest_season_roster(2026)
+        ingestor.ingest_results_and_background(2025, F1SessionType.RACE)
+        ingestor.ingest_results_and_background(2025, F1SessionType.QUALIFYING)
+        ingestor.setup_season(2026)
