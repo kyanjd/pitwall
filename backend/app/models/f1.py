@@ -10,7 +10,7 @@ class Result(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     driver_id: uuid.UUID = Field(foreign_key="driver.id", nullable=False)
     f1session_id: uuid.UUID = Field(foreign_key="f1session.id", nullable=False)
-    constructor_id: uuid.UUID = Field(foreign_key="constructor.id", nullable=False)
+    constructor_id: Optional[uuid.UUID] = Field(foreign_key="constructor.id", nullable=True, default=None)
     position: int = Field(nullable=False)
     position_text: Optional[str] = Field(nullable=True)
     status: Optional[str] = Field(nullable=True)
