@@ -125,26 +125,16 @@ class Ingestor:
         print(time.time() - start)
 
     def ingest_season_roster(self, season: int) -> None:
-        """Seed stub results for all unresulted sessions in a season using driver standings.
-        Falls back to the previous season's standings if the target season has none yet.
+        """Seed stub results for all unresulted sessions in a season using drivers already in the DB.
         Run this after ingest_background to enable predictions for future races.
         Stub results use position=0 as a sentinel; real results overwrite them on ingestion.
         """
-        standings = self.client.driver_standings_for_season(season)
-        if not standings:
-            print(f"No standings for {season}, falling back to {season - 1}")
-            standings = self.client.driver_standings_for_season(season - 1)
-        if not standings:
-            print("No standings available, cannot seed roster.")
-            return
+        from app.models.f1 import Driver as DriverModel
 
-        # Upsert all drivers + their constructors, collect pairs
-        roster: list[tuple[uuid.UUID, uuid.UUID]] = []
-        for standing in standings:
-            driver_db = self.ingest_driver_api(standing["Driver"])
-            constructor_db = self.ingest_constructor_api(standing["Constructors"][0])
-            roster.append((driver_db.id, constructor_db.id))
-        self.session.commit()
+        driver_ids = list(self.session.exec(select(DriverModel.id)).all())
+        if not driver_ids:
+            print("No drivers in DB, run ingest_background first.")
+            return
 
         # Find sessions in this season that have no real results yet (position > 0 = real)
         sessions_with_real_results = set(
@@ -154,11 +144,11 @@ class Ingestor:
         target_sessions = [s for s in all_season_sessions if s.id not in sessions_with_real_results]
 
         for f1session in target_sessions:
-            for driver_id, constructor_id in roster:
+            for driver_id in driver_ids:
                 stub = Result(
                     driver_id=driver_id,
                     f1session_id=f1session.id,
-                    constructor_id=constructor_id,
+                    constructor_id=None,
                     position=0,
                     status="TBD",
                     position_text=None,
@@ -173,7 +163,12 @@ class Ingestor:
                 self.session.rollback()
                 print(f"Error seeding session {f1session.id}: {e}")
 
-        print(f"Seeded {len(target_sessions)} sessions with {len(roster)} drivers each.")
+        print(f"Seeded {len(target_sessions)} sessions with {len(driver_ids)} drivers each.")
+
+    def setup_season(self, season: int) -> None:
+        """Run once at the start of a season: ingest schedule + drivers, then seed stub results."""
+        self.ingest_background(season)
+        self.ingest_season_roster(season)
 
     def ingest_background(self, season: int):
         races = self.client.all_circuits_in_season(season)
@@ -190,6 +185,10 @@ class Ingestor:
                 self.session.rollback()
                 print(f"Error ingesting circuit {race['Circuit']['circuitName']}: {e}")
 
+        for driver_data in self.client.all_drivers_in_season(season):
+            self.ingest_driver_api(driver_data)
+        self.session.commit()
+
     def to_datetime(self, date_str: str, time_str: str) -> datetime:
         dt = datetime.fromisoformat(f"{date_str}T{time_str.replace('Z', '+00:00')}")
         return dt
@@ -202,4 +201,4 @@ if __name__ == "__main__":
         #     ingestor.ingest_results_and_background(season, F1SessionType.RACE)
         #     ingestor.ingest_results_and_background(season, F1SessionType.QUALIFYING)
         ingestor.ingest_background(2026)
-        inges
+        ingestor.ingest_season_roster(2026)
