@@ -104,12 +104,11 @@ class F1DataClient:
 
 
 if __name__ == "__main__":
-    pass
     # from app.db.session import engine  # your SQLAlchemy engine
     # from sqlmodel import SQLModel, text
 
     client = F1DataClient()
     # print(client.race_by_round(2025, 3))
     # print(client.all_circuits_in_season(2026))
-    races = client.all_circuits_in_season(2026)
-    print(races[0])
+    races = client.all_drivers_in_season(2026)
+    print(races)
