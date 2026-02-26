@@ -128,9 +128,35 @@ def set_first_dnf(*, session: Session, f1session_id: uuid.UUID, driver_id: uuid.
     session.commit()
 
 
+def get_drivers_for_season(*, session: Session, season: int) -> list[Driver]:
+    statement = (
+        select(Driver)
+        .join(Result)
+        .join(F1Session)
+        .join(Race)
+        .where(Race.season == season)
+        .distinct()
+    )
+    return list(session.exec(statement).all())
+
+
 def get_drivers_for_session(*, session: Session, f1session_id: uuid.UUID) -> list[Driver]:
     statement = select(Driver).join(Result).where(Result.f1session_id == f1session_id)
     drivers = list(session.exec(statement).all())
+    if drivers:
+        return drivers
+
+    # No results yet (future race) — fall back to same season's grid, then previous season
+    f1session = session.get(F1Session, f1session_id)
+    if not f1session:
+        return []
+    race = session.get(Race, f1session.race_id)
+    if not race:
+        return []
+
+    drivers = get_drivers_for_season(session=session, season=race.season)
+    if not drivers:
+        drivers = get_drivers_for_season(session=session, season=race.season - 1)
     return drivers
 
 

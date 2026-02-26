@@ -46,6 +46,15 @@ class Ingestor:
         f1session_db = crud.f1.upsert_f1session(session=self.session, f1session=f1session_model)
         return f1session_db
 
+    def ingest_f1session_api_quali(self, f1session_data, race_id) -> F1Session:
+        f1session_model = F1Session(
+            race_id=race_id,
+            type=F1SessionType.QUALIFYING,
+            date=self.to_datetime(f1session_data["Qualifying"]["date"], f1session_data["Qualifying"]["time"]),
+        )
+        f1session_db = crud.f1.upsert_f1session(session=self.session, f1session=f1session_model)
+        return f1session_db
+
     def ingest_driver_api(self, driver_data: dict) -> Driver:
         driver_model = Driver(
             external_id=driver_data["driverId"],
@@ -116,7 +125,19 @@ class Ingestor:
         print(time.time() - start)
 
     def ingest_background(self, season: int):
-        pass
+        races = self.client.all_circuits_in_season(season)
+        for race in races:
+            try:
+                circuit_db = self.ingest_circuit_api(race["Circuit"])
+                race_db = self.ingest_race_api(race, season, circuit_db.id)
+                _ = self.ingest_f1session_api(race, race_db.id, F1SessionType.RACE)
+                _ = self.ingest_f1session_api_quali(race, race_db.id)
+
+                self.session.commit()
+
+            except Exception as e:
+                self.session.rollback()
+                print(f"Error ingesting circuit {race['Circuit']['circuitName']}: {e}")
 
     def to_datetime(self, date_str: str, time_str: str) -> datetime:
         dt = datetime.fromisoformat(f"{date_str}T{time_str.replace('Z', '+00:00')}")
@@ -126,6 +147,7 @@ class Ingestor:
 if __name__ == "__main__":
     with get_session_local() as session:
         ingestor = Ingestor(session=session)
-        for season in [2025, 2026]:
-            ingestor.ingest_results_and_background(season, F1SessionType.RACE)
-            ingestor.ingest_results_and_background(season, F1SessionType.QUALIFYING)
+        # for season in [2025, 2026]:
+        #     ingestor.ingest_results_and_background(season, F1SessionType.RACE)
+        #     ingestor.ingest_results_and_background(season, F1SessionType.QUALIFYING)
+        ingestor.ingest_background(2026)
