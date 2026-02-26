@@ -90,6 +90,13 @@ class F1DataClient:
         result_list = self.get_all(f"{season}/qualifying.json")
         return result_list
 
+    def driver_standings_for_season(self, season: int) -> list:
+        result = self.get(f"{season}/driverStandings.json")
+        standings_lists = result.get("MRData", {}).get("StandingsTable", {}).get("StandingsLists", [])
+        if not standings_lists:
+            return []
+        return standings_lists[0].get("DriverStandings", [])
+
     def race_by_round(self, season: int, round: int) -> dict:
         result = self.get(f"{season}/{round}/results.json")
         result_list = result["MRData"]["RaceTable"]

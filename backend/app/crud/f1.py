@@ -154,10 +154,7 @@ def get_drivers_for_session(*, session: Session, f1session_id: uuid.UUID) -> lis
     if not race:
         return []
 
-    drivers = get_drivers_for_season(session=session, season=race.season)
-    if not drivers:
-        drivers = get_drivers_for_season(session=session, season=race.season - 1)
-    return drivers
+    return get_drivers_for_season(session=session, season=race.season)
 
 
 def get_sessions_for_season(*, session: Session, season: int) -> list[F1Session]:
