@@ -104,12 +104,21 @@ def get_result_by_f1session_and_driver(*, session: Session, f1session_id: uuid.U
 
 
 def get_first_dnf_by_f1session(*, session: Session, f1session_id: uuid.UUID) -> Driver | None:
-    statement = (
+    # Explicit override takes priority regardless of status
+    override = session.exec(
+        select(Result)
+        .where(Result.f1session_id == f1session_id, Result.dnf_order != None)  # noqa: E711
+        .order_by(col(Result.dnf_order).asc())
+    ).first()
+    if override:
+        return override.driver
+
+    # Fall back to natural order: first non-finisher by laps
+    result = session.exec(
         select(Result)
         .where(Result.f1session_id == f1session_id, Result.status != "Finished")
-        .order_by(col(Result.dnf_order).asc().nulls_last(), col(Result.laps).asc())
-    )
-    result = session.exec(statement).first()
+        .order_by(col(Result.laps).asc())
+    ).first()
     return result.driver if result else None
 
 
