@@ -74,6 +74,18 @@ class F1SessionPublic(SQLModel):
     race_season: int
 
 
+class ResultPublic(SQLModel):
+    driver_id: uuid.UUID
+    driver_code: str
+    driver_first_name: str
+    driver_last_name: str
+    position: int
+    position_text: Optional[str]
+    status: Optional[str]
+    laps: Optional[int]
+    is_first_dnf: bool
+
+
 class Circuit(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     external_id: str = Field(nullable=False, unique=True, index=True)

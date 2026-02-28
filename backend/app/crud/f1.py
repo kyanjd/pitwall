@@ -157,6 +157,15 @@ def get_drivers_for_session(*, session: Session, f1session_id: uuid.UUID) -> lis
     return get_drivers_for_season(session=session, season=race.season)
 
 
+def get_results_for_session(*, session: Session, f1session_id: uuid.UUID) -> list[Result]:
+    statement = (
+        select(Result)
+        .where(Result.f1session_id == f1session_id, Result.position > 0)
+        .order_by(Result.position)
+    )
+    return list(session.exec(statement).all())
+
+
 def get_sessions_for_season(*, session: Session, season: int) -> list[F1Session]:
     statement = select(F1Session).join(Race).where(Race.season == season)
     sessions = list(session.exec(statement).all())

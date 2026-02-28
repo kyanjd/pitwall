@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  GamePublic, F1SessionPublic, Driver, MemberScore, PredictionPublic,
-  getSessions, getDrivers, predict, getLeaderboard,
+  GamePublic, F1SessionPublic, Driver, MemberScore, PredictionPublic, ResultPublic,
+  getSessions, getDrivers, getSessionResults, predict, getLeaderboard,
   getMyPrediction, getMembers, getGamePredictions, setFirstDnf,
 } from '../api';
 
@@ -47,6 +47,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
 
   // Predict
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [results, setResults] = useState<ResultPublic[]>([]);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [posDriverId, setPosDriverId] = useState('');
   const [dnfDriverId, setDnfDriverId] = useState('');
@@ -98,6 +99,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     setPosDriverId('');
     setDnfDriverId('');
     setExistingPrediction(null);
+    setResults([]);
     setDnfOverrideDriverId('');
     setDnfOverrideSuccess(false);
     setDnfOverrideError('');
@@ -115,7 +117,11 @@ export default function GamePage({ token, game, currentUserId }: Props) {
         }
       });
 
-    Promise.all([loadDrivers, loadPrediction]).finally(() => setLoadingDrivers(false));
+    const loadResults = getSessionResults(token, selectedSession.id)
+      .then(setResults)
+      .catch(() => {});
+
+    Promise.all([loadDrivers, loadPrediction, loadResults]).finally(() => setLoadingDrivers(false));
   }, [token, selectedSession, game.id]);
 
   // Load which sessions the current user has predicted
@@ -162,6 +168,8 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     try {
       await setFirstDnf(token, game.id, selectedSession.id, dnfOverrideDriverId);
       setDnfOverrideSuccess(true);
+      const refreshed = await getSessionResults(token, selectedSession.id);
+      setResults(refreshed);
     } catch (err: unknown) {
       setDnfOverrideError(err instanceof Error ? err.message : 'Failed to set DNF');
     } finally {
@@ -182,6 +190,8 @@ export default function GamePage({ token, game, currentUserId }: Props) {
       await predict(token, game.id, selectedSession.id, posDriverId, dnfDriverId);
       setPredictSuccess(true);
       setPredictedSessionIds(prev => new Set([...prev, selectedSession.id]));
+      const pred = await getMyPrediction(token, game.id, selectedSession.id);
+      if (pred) setExistingPrediction(pred);
     } catch (err: unknown) {
       setPredictError(err instanceof Error ? err.message : 'Failed to submit prediction');
     } finally {
@@ -370,6 +380,65 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                   </div>
                   {dnfOverrideSuccess && <p className="success" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>DNF override saved.</p>}
                   {dnfOverrideError && <p className="error" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>{dnfOverrideError}</p>}
+                </div>
+              )}
+
+              {existingPrediction && results.length > 0 && (
+                <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '1px solid #2a2a2a' }}>
+                  <p style={{ fontSize: '0.75rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>Race Results</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                    {results.map(r => {
+                      const isP10 = r.position === 10;
+                      const isDnf = r.is_first_dnf;
+                      const isMyPos = r.driver_id === existingPrediction.position_driver_id;
+                      const isMyDnf = r.driver_id === existingPrediction.dnf_driver_id;
+
+                      let rowBg = 'transparent';
+                      let borderColor = 'transparent';
+                      if (isP10) { rowBg = 'rgba(212, 175, 55, 0.08)'; borderColor = 'rgba(212, 175, 55, 0.4)'; }
+                      if (isDnf) { rowBg = 'rgba(225, 6, 0, 0.08)'; borderColor = 'rgba(225, 6, 0, 0.4)'; }
+
+                      return (
+                        <div
+                          key={r.driver_id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.35rem 0.6rem',
+                            borderRadius: '4px',
+                            background: rowBg,
+                            border: `1px solid ${borderColor}`,
+                          }}
+                        >
+                          <span style={{ width: '1.5rem', textAlign: 'right', fontSize: '0.75rem', color: '#555', fontFamily: 'monospace' }}>
+                            {r.position_text ?? r.position}
+                          </span>
+                          <span style={{ width: '2.5rem', fontSize: '0.8rem', fontWeight: 600, color: isP10 ? '#d4af37' : isDnf ? '#e10600' : '#ccc', fontFamily: 'monospace' }}>
+                            {r.driver_code}
+                          </span>
+                          <span style={{ flex: 1, fontSize: '0.75rem', color: '#888' }}>
+                            {r.driver_first_name} {r.driver_last_name}
+                          </span>
+                          <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+                            {isMyPos && (
+                              <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(212,175,55,0.15)', color: '#d4af37', border: '1px solid rgba(212,175,55,0.3)' }}>
+                                10th pick
+                              </span>
+                            )}
+                            {isMyDnf && (
+                              <span style={{ fontSize: '0.6rem', padding: '1px 5px', borderRadius: '3px', background: 'rgba(225,6,0,0.15)', color: '#e10600', border: '1px solid rgba(225,6,0,0.3)' }}>
+                                DNF pick
+                              </span>
+                            )}
+                            {isDnf && (
+                              <span style={{ fontSize: '0.6rem', color: '#e10600' }}>DNF</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </>

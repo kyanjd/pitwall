@@ -40,6 +40,18 @@ export interface Driver {
   external_id: string;
 }
 
+export interface ResultPublic {
+  driver_id: string;
+  driver_code: string;
+  driver_first_name: string;
+  driver_last_name: string;
+  position: number;
+  position_text: string | null;
+  status: string | null;
+  laps: number | null;
+  is_first_dnf: boolean;
+}
+
 export interface MemberScore {
   user_id: string;
   position_score: number;
@@ -143,6 +155,11 @@ export async function getSessions(token: string, season: number): Promise<F1Sess
 
 export async function getDrivers(token: string, sessionId: string): Promise<Driver[]> {
   const res = await fetch(`${BASE}/f1/session/${sessionId}/drivers`, { headers: auth(token) });
+  return handle(res);
+}
+
+export async function getSessionResults(token: string, sessionId: string): Promise<ResultPublic[]> {
+  const res = await fetch(`${BASE}/f1/session/${sessionId}/results`, { headers: auth(token) });
   return handle(res);
 }
 
