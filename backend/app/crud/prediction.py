@@ -5,6 +5,7 @@ from sqlmodel import Session, select
 from app import crud
 from app.core.errors import NotFoundError
 from app.models.f1 import Result
+from app.models.game import GameUser
 from app.models.prediction import MemberScore, Prediction, PredictionCreate, SessionScores
 from app.services.score import Scorer
 
@@ -112,4 +113,11 @@ def score_game(*, session: Session, game_id: uuid.UUID) -> list[MemberScore]:
             )
         else:
             totals[p.user_id] = ms
+
+    # Ensure all game members appear, even those with no scored predictions yet
+    all_member_ids = session.exec(select(GameUser.user_id).where(GameUser.game_id == game_id)).all()
+    for member_id in all_member_ids:
+        if member_id not in totals:
+            totals[member_id] = MemberScore(user_id=member_id, position_score=0, dnf_score=0)
+
     return sorted(totals.values(), key=lambda s: s.total_score, reverse=True)

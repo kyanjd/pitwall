@@ -1,4 +1,5 @@
-const BASE = '/api';
+// const BASE = '/api';
+const BASE = "https://offline-beds-behind-protective.trycloudflare.com"
 
 // --- Types ---
 
