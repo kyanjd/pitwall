@@ -9,8 +9,7 @@ app = FastAPI(title="Pitwall", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: need to change later v bad security
-    allow_credentials=True,
+    allow_origins=["*"],  # TODO: need to change later v bad securitys
     allow_methods=["*"],
     allow_headers=["*"],
 )

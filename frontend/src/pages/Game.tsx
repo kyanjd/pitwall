@@ -48,6 +48,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
   // Predict
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [results, setResults] = useState<ResultPublic[]>([]);
+  const [sessionPredictions, setSessionPredictions] = useState<PredictionPublic[]>([]);
   const [loadingDrivers, setLoadingDrivers] = useState(false);
   const [posDriverId, setPosDriverId] = useState('');
   const [dnfDriverId, setDnfDriverId] = useState('');
@@ -100,6 +101,7 @@ export default function GamePage({ token, game, currentUserId }: Props) {
     setDnfDriverId('');
     setExistingPrediction(null);
     setResults([]);
+    setSessionPredictions([]);
     setDnfOverrideDriverId('');
     setDnfOverrideSuccess(false);
     setDnfOverrideError('');
@@ -121,14 +123,24 @@ export default function GamePage({ token, game, currentUserId }: Props) {
       .then(setResults)
       .catch(() => {});
 
-    Promise.all([loadDrivers, loadPrediction, loadResults]).finally(() => setLoadingDrivers(false));
+    const sessionId = selectedSession.id;
+    const loadSessionPredictions = getGamePredictions(token, game.id)
+      .then(all => setSessionPredictions(all.filter(p => p.f1session_id === sessionId)))
+      .catch(() => {});
+
+    Promise.all([loadDrivers, loadPrediction, loadResults, loadSessionPredictions]).finally(() => setLoadingDrivers(false));
   }, [token, selectedSession, game.id]);
 
-  // Load which sessions the current user has predicted
+  // Load which sessions the current user has predicted + member names
   useEffect(() => {
     getGamePredictions(token, game.id).then(predictions => {
       const ids = new Set(predictions.filter(p => p.user_id === currentUserId).map(p => p.f1session_id));
       setPredictedSessionIds(ids);
+    }).catch(() => {});
+    getMembers(token, game.id).then(members => {
+      const names: Record<string, string> = {};
+      members.forEach(m => { names[m.id] = m.name; });
+      setMemberNames(names);
     }).catch(() => {});
   }, [token, game.id, currentUserId]);
 
@@ -190,8 +202,12 @@ export default function GamePage({ token, game, currentUserId }: Props) {
       await predict(token, game.id, selectedSession.id, posDriverId, dnfDriverId);
       setPredictSuccess(true);
       setPredictedSessionIds(prev => new Set([...prev, selectedSession.id]));
-      const pred = await getMyPrediction(token, game.id, selectedSession.id);
+      const [pred, allPreds] = await Promise.all([
+        getMyPrediction(token, game.id, selectedSession.id),
+        getGamePredictions(token, game.id),
+      ]);
       if (pred) setExistingPrediction(pred);
+      setSessionPredictions(allPreds.filter(p => p.f1session_id === selectedSession.id));
     } catch (err: unknown) {
       setPredictError(err instanceof Error ? err.message : 'Failed to submit prediction');
     } finally {
@@ -305,37 +321,60 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                   You've already predicted this session — your picks are shown below. Submitting will update them.
                 </p>
               )}
-              <div className="predict-section">
-                <h3>Who finishes 10th?</h3>
-                <div className="driver-grid">
-                  {drivers.map(d => (
-                    <div
-                      key={d.id}
-                      className={`driver-card ${posDriverId === d.id ? 'selected' : ''}`}
-                      onClick={() => setPosDriverId(d.id)}
-                    >
-                      <div className="driver-code">{d.code}</div>
-                      <div className="driver-name">{d.first_name} {d.last_name}</div>
+              {(() => {
+                const others = sessionPredictions.filter(p => p.user_id !== currentUserId);
+                const posByDriver = new Map(others.map(p => [p.position_driver_id, p.user_id]));
+                const dnfByDriver = new Map(others.map(p => [p.dnf_driver_id, p.user_id]));
+                return (
+                  <>
+                    <div className="predict-section">
+                      <h3>Who finishes 10th?</h3>
+                      <div className="driver-grid">
+                        {drivers.map(d => {
+                          const takenBy = posByDriver.get(d.id);
+                          return (
+                            <div
+                              key={d.id}
+                              className={`driver-card ${posDriverId === d.id ? 'selected' : ''}`}
+                              onClick={() => !takenBy && setPosDriverId(d.id)}
+                              style={takenBy ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
+                            >
+                              <div className="driver-code">{d.code}</div>
+                              <div className="driver-name">{d.first_name} {d.last_name}</div>
+                              {takenBy && <div style={{ fontSize: '0.55rem', color: '#777', marginTop: '2px' }}>
+                                {memberNames[takenBy] ?? 'Taken'}
+                              </div>}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              <div className="predict-section">
-                <h3>Who DNFs first?</h3>
-                <div className="driver-grid">
-                  {drivers.map(d => (
-                    <div
-                      key={d.id}
-                      className={`driver-card ${dnfDriverId === d.id ? 'selected' : ''}`}
-                      onClick={() => setDnfDriverId(d.id)}
-                    >
-                      <div className="driver-code">{d.code}</div>
-                      <div className="driver-name">{d.first_name} {d.last_name}</div>
+                    <div className="predict-section">
+                      <h3>Who DNFs first?</h3>
+                      <div className="driver-grid">
+                        {drivers.map(d => {
+                          const takenBy = dnfByDriver.get(d.id);
+                          return (
+                            <div
+                              key={d.id}
+                              className={`driver-card ${dnfDriverId === d.id ? 'selected' : ''}`}
+                              onClick={() => !takenBy && setDnfDriverId(d.id)}
+                              style={takenBy ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
+                            >
+                              <div className="driver-code">{d.code}</div>
+                              <div className="driver-name">{d.first_name} {d.last_name}</div>
+                              {takenBy && <div style={{ fontSize: '0.55rem', color: '#777', marginTop: '2px' }}>
+                                {memberNames[takenBy] ?? 'Taken'}
+                              </div>}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </>
+                );
+              })()}
 
               {predictError && <p className="error" style={{ marginBottom: '1rem' }}>{predictError}</p>}
               {predictSuccess && <p className="success" style={{ marginBottom: '1rem' }}>Prediction saved!</p>}

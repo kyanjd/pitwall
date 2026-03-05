@@ -3,7 +3,7 @@ import uuid
 from sqlmodel import Session, select
 
 from app import crud
-from app.core.errors import NotFoundError
+from app.core.errors import AlreadyExistsError, NotFoundError
 from app.models.f1 import Result
 from app.models.game import GameUser
 from app.models.prediction import MemberScore, Prediction, PredictionCreate, SessionScores
@@ -13,6 +13,28 @@ from app.services.score import Scorer
 def upsert_prediction(
     *, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, prediction_create: PredictionCreate
 ) -> Prediction:
+    pos_conflict = session.exec(
+        select(Prediction).where(
+            Prediction.game_id == game_id,
+            Prediction.f1session_id == prediction_create.f1session_id,
+            Prediction.position_driver_id == prediction_create.position_driver_id,
+            Prediction.user_id != user_id,
+        )
+    ).first()
+    if pos_conflict:
+        raise AlreadyExistsError("That driver is already picked for 10th by another player")
+
+    dnf_conflict = session.exec(
+        select(Prediction).where(
+            Prediction.game_id == game_id,
+            Prediction.f1session_id == prediction_create.f1session_id,
+            Prediction.dnf_driver_id == prediction_create.dnf_driver_id,
+            Prediction.user_id != user_id,
+        )
+    ).first()
+    if dnf_conflict:
+        raise AlreadyExistsError("That driver is already picked for DNF by another player")
+
     statement = select(Prediction).where(
         Prediction.game_id == game_id,
         Prediction.f1session_id == prediction_create.f1session_id,
