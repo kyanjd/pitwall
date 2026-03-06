@@ -11,12 +11,12 @@ from app.services.score import Scorer
 
 
 def upsert_prediction(
-    *, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, prediction_create: PredictionCreate
+    *, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, f1session_id: uuid.UUID, prediction_create: PredictionCreate
 ) -> Prediction:
     pos_conflict = session.exec(
         select(Prediction).where(
             Prediction.game_id == game_id,
-            Prediction.f1session_id == prediction_create.f1session_id,
+            Prediction.f1session_id == f1session_id,
             Prediction.position_driver_id == prediction_create.position_driver_id,
             Prediction.user_id != user_id,
         )
@@ -27,7 +27,7 @@ def upsert_prediction(
     dnf_conflict = session.exec(
         select(Prediction).where(
             Prediction.game_id == game_id,
-            Prediction.f1session_id == prediction_create.f1session_id,
+            Prediction.f1session_id == f1session_id,
             Prediction.dnf_driver_id == prediction_create.dnf_driver_id,
             Prediction.user_id != user_id,
         )
@@ -37,7 +37,7 @@ def upsert_prediction(
 
     statement = select(Prediction).where(
         Prediction.game_id == game_id,
-        Prediction.f1session_id == prediction_create.f1session_id,
+        Prediction.f1session_id == f1session_id,
         Prediction.user_id == user_id,
     )
     existing_prediction = session.exec(statement).first()
@@ -51,7 +51,7 @@ def upsert_prediction(
         session.refresh(existing_prediction)
         return existing_prediction
     else:
-        db_obj = Prediction.model_validate(prediction_create, update={"user_id": user_id, "game_id": game_id})
+        db_obj = Prediction.model_validate(prediction_create, update={"user_id": user_id, "game_id": game_id, "f1session_id": f1session_id})
         session.add(db_obj)
         session.commit()
         session.refresh(db_obj)

@@ -167,14 +167,14 @@ export async function getSessionResults(token: string, sessionId: string): Promi
 export async function predict(
   token: string,
   gameId: string,
-  f1session_id: string,
+  sessionId: string,
   position_driver_id: string,
   dnf_driver_id: string
 ): Promise<void> {
-  const res = await fetch(`${BASE}/game/${gameId}/predict`, {
+  const res = await fetch(`${BASE}/game/${gameId}/f1session/${sessionId}/predict`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...auth(token) },
-    body: JSON.stringify({ f1session_id, position_driver_id, dnf_driver_id, position: 10 }),
+    body: JSON.stringify({ position_driver_id, dnf_driver_id, position: 10 }),
   });
   await handle(res);
 }

@@ -56,12 +56,14 @@ def get_game_member_users(session: CurrentSession, current_user: CurrentUser, ga
 ## Prediction routes (all within game)
 
 
-@router.post("/{game_id}/predict", response_model=PredictionPublic)
+@router.post("/{game_id}/f1session/{f1session_id}/predict", response_model=PredictionPublic)
 def make_prediction(
-    session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, prediction_create: PredictionCreate
+    session: CurrentSession, current_user: CurrentUser,
+    game_id: uuid.UUID, f1session_id: uuid.UUID, prediction_create: PredictionCreate
 ) -> PredictionPublic:
     prediction = crud.prediction.upsert_prediction(
-        session=session, prediction_create=prediction_create, user_id=current_user.id, game_id=game_id
+        session=session, prediction_create=prediction_create,
+        user_id=current_user.id, game_id=game_id, f1session_id=f1session_id
     )
     return PredictionPublic.model_validate(prediction)
 

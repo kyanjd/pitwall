@@ -20,7 +20,6 @@ class Prediction(SQLModel, table=True):
 
 
 class PredictionCreate(SQLModel):
-    f1session_id: uuid.UUID
     position_driver_id: uuid.UUID
     dnf_driver_id: uuid.UUID
     position: int = 10
