@@ -342,9 +342,16 @@ export default function GamePage({ token, game, currentUserId }: Props) {
             <p className="empty">Loading drivers…</p>
           ) : drivers.length === 0 ? (
             <p className="empty">No drivers found for this session. Results may not be ingested yet.</p>
-          ) : (
+          ) : (() => {
+            const isLocked = new Date(selectedSession.date).getTime() <= now;
+            return (
             <>
-              {existingPrediction && (
+              {isLocked && (
+                <p style={{ fontSize: '0.8rem', color: '#e10600', marginBottom: '1.25rem' }}>
+                  Predictions locked — this session has started.
+                </p>
+              )}
+              {!isLocked && existingPrediction && (
                 <p style={{ fontSize: '0.8rem', color: '#51cf66', marginBottom: '1.25rem' }}>
                   You've already predicted this session — your picks are shown below. Submitting will update them.
                 </p>
@@ -360,12 +367,13 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                       <div className="driver-grid">
                         {drivers.map(d => {
                           const takenBy = posByDriver.get(d.id);
+                          const blocked = isLocked || !!takenBy;
                           return (
                             <div
                               key={d.id}
                               className={`driver-card ${posDriverId === d.id ? 'selected' : ''}`}
-                              onClick={() => !takenBy && setPosDriverId(d.id)}
-                              style={takenBy ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
+                              onClick={() => !blocked && setPosDriverId(d.id)}
+                              style={blocked ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
                             >
                               <div className="driver-code">{d.code}</div>
                               <div className="driver-name">{d.first_name} {d.last_name}</div>
@@ -383,12 +391,13 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                       <div className="driver-grid">
                         {drivers.map(d => {
                           const takenBy = dnfByDriver.get(d.id);
+                          const blocked = isLocked || !!takenBy;
                           return (
                             <div
                               key={d.id}
                               className={`driver-card ${dnfDriverId === d.id ? 'selected' : ''}`}
-                              onClick={() => !takenBy && setDnfDriverId(d.id)}
-                              style={takenBy ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
+                              onClick={() => !blocked && setDnfDriverId(d.id)}
+                              style={blocked ? { opacity: 0.35, cursor: 'not-allowed' } : undefined}
                             >
                               <div className="driver-code">{d.code}</div>
                               <div className="driver-name">{d.first_name} {d.last_name}</div>
@@ -407,24 +416,26 @@ export default function GamePage({ token, game, currentUserId }: Props) {
               {predictError && <p className="error" style={{ marginBottom: '1rem' }}>{predictError}</p>}
               {predictSuccess && <p className="success" style={{ marginBottom: '1rem' }}>Prediction saved!</p>}
 
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                <button
-                  className="btn-primary"
-                  onClick={handlePredict}
-                  disabled={predicting || !posDriverId || !dnfDriverId}
-                >
-                  {predicting ? 'Saving…' : 'Submit prediction'}
-                </button>
-                {existingPrediction && (
+              {!isLocked && (
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                   <button
-                    className="btn-sm"
-                    onClick={handleClearPrediction}
-                    style={{ color: '#888', background: 'transparent', border: '1px solid #333' }}
+                    className="btn-primary"
+                    onClick={handlePredict}
+                    disabled={predicting || !posDriverId || !dnfDriverId}
                   >
-                    Clear
+                    {predicting ? 'Saving…' : 'Submit prediction'}
                   </button>
-                )}
-              </div>
+                  {existingPrediction && (
+                    <button
+                      className="btn-sm"
+                      onClick={handleClearPrediction}
+                      style={{ color: '#888', background: 'transparent', border: '1px solid #333' }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
 
               {posDriverId && dnfDriverId && (
                 <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#888' }}>
@@ -520,7 +531,8 @@ export default function GamePage({ token, game, currentUserId }: Props) {
                 </div>
               )}
             </>
-          )}
+            );
+          })()}
         </div>
       )}
 

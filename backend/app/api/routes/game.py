@@ -1,13 +1,21 @@
 import uuid
+from datetime import datetime, timezone
 
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
 from app.core.errors import ForbiddenError
+from app.models.f1 import F1Session
 from app.models.game import GameCreate, GameJoin, GamePublic, GamePublicWithMembers
 from app.models.prediction import MemberScore, PredictionCreate, PredictionPublic, SessionScores
 from app.models.user import UserPublic
 from fastapi import APIRouter
 from pydantic import BaseModel
+
+
+def check_session_open(db_session: CurrentSession, f1session_id: uuid.UUID) -> None:
+    f1session = db_session.get(F1Session, f1session_id)
+    if f1session and datetime.now(timezone.utc) >= f1session.date.replace(tzinfo=timezone.utc):
+        raise ForbiddenError("Predictions are locked — the session has already started")
 
 router = APIRouter(prefix="/game", tags=["game"])
 
@@ -61,6 +69,7 @@ def make_prediction(
     session: CurrentSession, current_user: CurrentUser,
     game_id: uuid.UUID, f1session_id: uuid.UUID, prediction_create: PredictionCreate
 ) -> PredictionPublic:
+    check_session_open(session, f1session_id)
     prediction = crud.prediction.upsert_prediction(
         session=session, prediction_create=prediction_create,
         user_id=current_user.id, game_id=game_id, f1session_id=f1session_id
@@ -100,6 +109,7 @@ def get_my_prediction(
 def delete_prediction(
     session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, f1session_id: uuid.UUID
 ) -> None:
+    check_session_open(session, f1session_id)
     crud.prediction.delete_prediction(
         session=session, user_id=current_user.id, game_id=game_id, f1session_id=f1session_id
     )
