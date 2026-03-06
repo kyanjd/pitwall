@@ -87,6 +87,20 @@ def get_prediction_for_user_and_session(
     return prediction
 
 
+def delete_prediction(
+    *, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, f1session_id: uuid.UUID
+) -> None:
+    statement = select(Prediction).where(
+        Prediction.game_id == game_id,
+        Prediction.f1session_id == f1session_id,
+        Prediction.user_id == user_id,
+    )
+    prediction = session.exec(statement).first()
+    if prediction:
+        session.delete(prediction)
+        session.commit()
+
+
 def session_has_results(*, session: Session, f1session_id: uuid.UUID) -> bool:
     # position > 0 excludes stub results created by ingest_season_roster (position=0 sentinel)
     statement = select(Result).where(Result.f1session_id == f1session_id, Result.position > 0)

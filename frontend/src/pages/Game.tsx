@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   GamePublic, F1SessionPublic, Driver, MemberScore, PredictionPublic, ResultPublic,
-  getSessions, getDrivers, getSessionResults, predict, getLeaderboard,
+  getSessions, getDrivers, getSessionResults, predict, deletePrediction, getLeaderboard,
   getMyPrediction, getMembers, getGamePredictions, setFirstDnf,
 } from '../api';
 
@@ -186,6 +186,21 @@ export default function GamePage({ token, game, currentUserId }: Props) {
       setDnfOverrideError(err instanceof Error ? err.message : 'Failed to set DNF');
     } finally {
       setSettingDnf(false);
+    }
+  }
+
+  async function handleClearPrediction() {
+    if (!selectedSession || !existingPrediction) return;
+    try {
+      await deletePrediction(token, game.id, selectedSession.id);
+      setExistingPrediction(null);
+      setPosDriverId('');
+      setDnfDriverId('');
+      setPredictedSessionIds(prev => { const s = new Set(prev); s.delete(selectedSession.id); return s; });
+      const allPreds = await getGamePredictions(token, game.id);
+      setSessionPredictions(allPreds.filter(p => p.f1session_id === selectedSession.id));
+    } catch (err: unknown) {
+      setPredictError(err instanceof Error ? err.message : 'Failed to clear prediction');
     }
   }
 
@@ -379,13 +394,24 @@ export default function GamePage({ token, game, currentUserId }: Props) {
               {predictError && <p className="error" style={{ marginBottom: '1rem' }}>{predictError}</p>}
               {predictSuccess && <p className="success" style={{ marginBottom: '1rem' }}>Prediction saved!</p>}
 
-              <button
-                className="btn-primary"
-                onClick={handlePredict}
-                disabled={predicting || !posDriverId || !dnfDriverId}
-              >
-                {predicting ? 'Saving…' : 'Submit prediction'}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button
+                  className="btn-primary"
+                  onClick={handlePredict}
+                  disabled={predicting || !posDriverId || !dnfDriverId}
+                >
+                  {predicting ? 'Saving…' : 'Submit prediction'}
+                </button>
+                {existingPrediction && (
+                  <button
+                    className="btn-sm"
+                    onClick={handleClearPrediction}
+                    style={{ color: '#888', background: 'transparent', border: '1px solid #333' }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
 
               {posDriverId && dnfDriverId && (
                 <p style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: '#888' }}>

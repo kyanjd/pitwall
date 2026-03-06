@@ -94,6 +94,15 @@ def get_my_prediction(
     return PredictionPublic.model_validate(prediction)
 
 
+@router.delete("/{game_id}/f1session/{f1session_id}/predict", status_code=204)
+def delete_prediction(
+    session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, f1session_id: uuid.UUID
+) -> None:
+    crud.prediction.delete_prediction(
+        session=session, user_id=current_user.id, game_id=game_id, f1session_id=f1session_id
+    )
+
+
 @router.get("/{game_id}/f1session/{f1session_id}/score", response_model=MemberScore)
 def get_my_score_for_session(
     session: CurrentSession, current_user: CurrentUser, game_id: uuid.UUID, f1session_id: uuid.UUID

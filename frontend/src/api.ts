@@ -220,6 +220,14 @@ export async function getLeaderboard(token: string, gameId: string): Promise<Mem
   return handle(res);
 }
 
+export async function deletePrediction(token: string, gameId: string, sessionId: string): Promise<void> {
+  const res = await fetch(`${BASE}/game/${gameId}/f1session/${sessionId}/predict`, {
+    method: 'DELETE',
+    headers: auth(token),
+  });
+  if (!res.ok) await handle(res);
+}
+
 export async function setFirstDnf(token: string, gameId: string, sessionId: string, driverId: string): Promise<void> {
   const res = await fetch(`${BASE}/game/${gameId}/f1session/${sessionId}/dnf`, {
     method: 'PATCH',
