@@ -22,7 +22,7 @@ app = FastAPI(title="Pitwall", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: need to change later v bad securitys
+    allow_origins=["https://pitwall-tau.vercel.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
