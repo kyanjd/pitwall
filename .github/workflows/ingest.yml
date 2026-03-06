@@ -1,0 +1,19 @@
+name: Ingest F1 Results
+
+on:
+  workflow_dispatch:
+    inputs:
+      season:
+        description: 'Season year (e.g. 2026)'
+        required: true
+        default: '2026'
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ingest results
+        run: |
+          curl -X POST "${{ secrets.BACKEND_URL }}/f1/admin/ingest/${{ github.event.inputs.season }}/results" \
+            -H "x-admin-secret: ${{ secrets.ADMIN_SECRET }}" \
+            --fail --show-error
