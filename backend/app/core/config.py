@@ -12,9 +12,11 @@ class Settings(BaseSettings):
     DATABASE_URL_DOCKER: str
 
     SECRET_KEY: str = secrets.token_urlsafe(32)
+    ADMIN_SECRET: str = ""
 
 
 settings = Settings()  # type: ignore
 
 if __name__ == "__main__":
     print("DATABASE_URL:", settings.DATABASE_URL)
+    print("secret", settings.SECRET_KEY)

@@ -1,5 +1,4 @@
-const BASE = '/api';
-// const BASE = "https://offline-beds-behind-protective.trycloudflare.com"
+const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 // --- Types ---
 

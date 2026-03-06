@@ -1,11 +1,21 @@
 import uuid
+from typing import Annotated
 
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
+from app.core.config import settings
+from app.core.errors import ForbiddenError
 from app.models.f1 import Driver, F1SessionPublic, ResultPublic
-from fastapi import APIRouter
+from app.schema.f1 import F1SessionType
+from app.services.ingest import Ingestor
+from fastapi import APIRouter, Depends, Header
 
 router = APIRouter(prefix="/f1", tags=["f1"])
+
+
+def require_admin(x_admin_secret: Annotated[str, Header()] = "") -> None:
+    if not settings.ADMIN_SECRET or x_admin_secret != settings.ADMIN_SECRET:
+        raise ForbiddenError("Invalid admin secret")
 
 
 @router.get("/season/{season}/sessions", response_model=list[F1SessionPublic])
@@ -52,4 +62,22 @@ def get_results_for_session(session: CurrentSession, _: CurrentUser, f1session_i
 
 @router.get("/seasons", response_model=dict[str, list[int]])
 def get_seasons(session: CurrentSession) -> dict[str, list[int]]:
-    return {"seasons": [2025, 2026]}  # TODO: Get real seasons from DBx
+    return {"seasons": [2025, 2026]}  # TODO: Get real seasons from DB
+
+
+# --- Admin endpoints ---
+
+@router.post("/admin/setup/{season}", dependencies=[Depends(require_admin)])
+def admin_setup_season(session: CurrentSession, season: int) -> dict:
+    """Run once per season: ingest schedule + drivers + seed stub results."""
+    Ingestor(session=session).setup_season(season)
+    return {"ok": True, "season": season}
+
+
+@router.post("/admin/ingest/{season}/results", dependencies=[Depends(require_admin)])
+def admin_ingest_results(session: CurrentSession, season: int) -> dict:
+    """Ingest race + qualifying results for a season."""
+    ingestor = Ingestor(session=session)
+    ingestor.ingest_results_and_background(season, F1SessionType.RACE)
+    ingestor.ingest_results_and_background(season, F1SessionType.QUALIFYING)
+    return {"ok": True, "season": season}
