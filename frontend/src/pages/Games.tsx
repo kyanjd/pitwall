@@ -1,6 +1,17 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { getGames, createGame, joinGame, getSeasons, getSessions, GamePublic, F1SessionPublic } from '../api';
 
+function formatUKTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleString('en-GB', {
+    timeZone: 'Europe/London',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 function formatCountdown(targetMs: number, nowMs: number): string {
   const diff = targetMs - nowMs;
   if (diff <= 0) return 'Live';
@@ -105,7 +116,8 @@ export default function GamesPage({ token, onSelectGame }: Props) {
           {nextQuali && (
             <div style={{ flex: 1, background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.875rem 1rem' }}>
               <div style={{ fontSize: '0.65rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>Next Qualifying</div>
-              <div style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '0.35rem' }}>{nextQuali.race_name}</div>
+              <div style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '0.1rem' }}>{nextQuali.race_name}</div>
+              <div style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.35rem' }}>{formatUKTime(nextQuali.date)}</div>
               <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e10600', fontFamily: 'monospace' }}>
                 {formatCountdown(new Date(nextQuali.date).getTime(), now)}
               </div>
@@ -114,7 +126,8 @@ export default function GamesPage({ token, onSelectGame }: Props) {
           {nextRace && (
             <div style={{ flex: 1, background: '#111', border: '1px solid #2a2a2a', borderRadius: '8px', padding: '0.875rem 1rem' }}>
               <div style={{ fontSize: '0.65rem', color: '#666', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>Next Race</div>
-              <div style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '0.35rem' }}>{nextRace.race_name}</div>
+              <div style={{ fontSize: '0.85rem', color: '#ccc', marginBottom: '0.1rem' }}>{nextRace.race_name}</div>
+              <div style={{ fontSize: '0.7rem', color: '#555', marginBottom: '0.35rem' }}>{formatUKTime(nextRace.date)}</div>
               <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#e10600', fontFamily: 'monospace' }}>
                 {formatCountdown(new Date(nextRace.date).getTime(), now)}
               </div>
