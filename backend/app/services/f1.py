@@ -110,5 +110,7 @@ if __name__ == "__main__":
     client = F1DataClient()
     # print(client.race_by_round(2025, 3))
     # print(client.all_circuits_in_season(2026))
-    races = client.all_drivers_in_season(2026)
+    races = client.all_races_in_season(2026)
     print(races)
+    qualifying = client.all_qualifying_in_season(2026)
+    print(qualifying)
