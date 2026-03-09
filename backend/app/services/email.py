@@ -83,11 +83,3 @@ async def send_prediction_reminders():
                     )
                 except Exception as e:
                     print(f"Failed to send email to {user.email}: {e}")
-
-
-if __name__ == "__main__":
-    mailer = EmailService()
-    response = mailer.send_prediction_reminder(
-        to="kyanjd@gmail.com", session_name="2026 Monaco Grand Prix - Race", session_date="2026-03-15"
-    )
-    print(response)
