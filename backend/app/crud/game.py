@@ -61,7 +61,7 @@ def get_game_by_id_with_members(
     for game_user in game_users:
         user = session.get(User, game_user.user_id)
         if user:
-            members.append(UserPublic(name=user.name, email=user.email, id=user.id))
+            members.append(UserPublic(name=user.name, id=user.id))
     return game, members
 
 
