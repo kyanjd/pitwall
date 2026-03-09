@@ -14,7 +14,7 @@ router = APIRouter(prefix="/user", tags=["user"])
 def create_user(session: CurrentSession, user_create: UserCreate) -> UserPublic:
     user = crud.user.get_user_by_email(session=session, email=user_create.email)
     if user:
-        raise AlreadyExistsError(f"User with email {user_create.email} already exists.")
+        raise AlreadyExistsError("An account with that email already exists.")
     user = crud.user.create_user(session=session, user_create=user_create)
     return UserPublic.model_validate(user)
 
