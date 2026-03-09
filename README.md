@@ -6,6 +6,14 @@ Each race, every player picks who they think will finish 10th and who will DNF f
 
 **Live:** https://pitwall-tau.vercel.app
 
+***Note:** Render free tier has cold starts - site may take up to a minute to load.*
+
+## Game View
+<img width="1498" height="750" alt="image" src="https://github.com/user-attachments/assets/cc81abe2-5d86-4d0f-883c-02be14a23e2a" />
+
+## Prediction View
+<img width="1498" height="742" alt="image" src="https://github.com/user-attachments/assets/6bd87a8c-06fe-4f52-9846-9700c2ff3aee" />
+
 ---
 
 ## How scoring works
