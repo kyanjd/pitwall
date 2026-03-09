@@ -28,10 +28,16 @@ def get_game_by_invite_code(*, session: Session, invite_code: str) -> Game:
     return game
 
 
+MAX_MEMBERS_PER_GAME = 8
+
+
 def join_game(*, session: Session, invite_code: str, user_id: uuid.UUID) -> Game:
     game = get_game_by_invite_code(session=session, invite_code=invite_code)
     already_member = session.get(GameUser, (game.id, user_id))
     if not already_member:
+        member_count = len(session.exec(select(GameUser).where(GameUser.game_id == game.id)).all())
+        if member_count >= MAX_MEMBERS_PER_GAME:
+            raise ForbiddenError(f"This game is full (max {MAX_MEMBERS_PER_GAME} players).")
         add_user_to_game(session=session, game_id=game.id, user_id=user_id)
         session.commit()
     return game
