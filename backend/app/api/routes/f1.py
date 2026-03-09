@@ -2,20 +2,15 @@ import uuid
 from typing import Annotated
 
 from app import crud
-from app.api.dependencies import CurrentSession, CurrentUser
+from app.api.dependencies import CurrentSession, CurrentUser, require_admin
 from app.core.config import settings
-from app.core.errors import ForbiddenError
 from app.models.f1 import Driver, F1SessionPublic, ResultPublic
 from app.schema.f1 import F1SessionType
+from app.services.email import send_prediction_reminders
 from app.services.ingest import Ingestor
-from fastapi import APIRouter, Depends, Header
+from fastapi import APIRouter, Depends
 
 router = APIRouter(prefix="/f1", tags=["f1"])
-
-
-def require_admin(x_admin_secret: Annotated[str, Header()] = "") -> None:
-    if not settings.ADMIN_SECRET or x_admin_secret != settings.ADMIN_SECRET:
-        raise ForbiddenError("Invalid admin secret")
 
 
 @router.get("/season/{season}/sessions", response_model=list[F1SessionPublic])
@@ -67,6 +62,7 @@ def get_seasons(session: CurrentSession) -> dict[str, list[int]]:
 
 # --- Admin endpoints ---
 
+
 @router.post("/admin/setup/{season}", dependencies=[Depends(require_admin)])
 def admin_setup_season(session: CurrentSession, season: int) -> dict:
     """Run once per season: ingest schedule + drivers + seed stub results."""
@@ -81,3 +77,10 @@ def admin_ingest_results(session: CurrentSession, season: int) -> dict:
     ingestor.ingest_results_and_background(season, F1SessionType.RACE)
     ingestor.ingest_results_and_background(season, F1SessionType.QUALIFYING)
     return {"ok": True, "season": season}
+
+
+@router.post("/admin/trigger-reminders", dependencies=[Depends(require_admin)])
+async def admin_trigger_reminders() -> dict:
+    """Trigger prediction reminder emails to be sent immediately (for testing)."""
+    await send_prediction_reminders()
+    return {"ok": True}

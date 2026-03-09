@@ -1,0 +1,14 @@
+name: Send Prediction Reminder Emails
+
+on:
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send reminder emails
+        run: |
+          curl -X POST "${{ secrets.BACKEND_URL }}/f1/admin/trigger-reminders" \
+            -H "x-admin-secret: ${{ secrets.ADMIN_SECRET }}" \
+            --fail --show-error

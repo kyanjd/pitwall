@@ -4,11 +4,11 @@ from typing import Annotated
 import jwt
 from app import crud
 from app.core.config import settings
-from app.core.errors import UnauthorizedError
+from app.core.errors import ForbiddenError, UnauthorizedError
 from app.core.security import ALGORITHM
 from app.db.session import get_session
 from app.models.user import User
-from fastapi import Depends
+from fastapi import Depends, Header
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from sqlmodel import Session
@@ -37,3 +37,8 @@ def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def require_admin(x_admin_secret: Annotated[str, Header()] = "") -> None:
+    if not settings.ADMIN_SECRET or x_admin_secret != settings.ADMIN_SECRET:
+        raise ForbiddenError("Invalid admin secret")

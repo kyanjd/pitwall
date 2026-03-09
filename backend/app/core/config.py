@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # POSTGRES_PASSWORD: str
     # POSTGRES_DB: str
     DATABASE_URL: str
+    RESEND_API_KEY: str
     # DATABASE_URL_DOCKER: str
 
     SECRET_KEY: str = secrets.token_urlsafe(32)
