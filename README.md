@@ -51,6 +51,7 @@ Maximum per race: 35 points.
 - [Alembic](https://alembic.sqlalchemy.org/) — schema migrations
 - [APScheduler](https://apscheduler.readthedocs.io/) — scheduled email reminders
 - [Resend](https://resend.com/) — transactional email
+- [Bruno](https://www.usebruno.com/) - API testing
 - [uv](https://docs.astral.sh/uv/) — package management
 
 **Frontend**
