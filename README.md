@@ -120,7 +120,9 @@ The project started with `SQLModel.metadata.create_all` for convenience during e
 
 ## Email reminders
 
-An APScheduler job runs every 30 minutes and checks whether any race session starts within the next hour. If one does, it queries for game members who have not yet submitted a prediction and sends them a reminder via Resend. There is also an admin endpoint to trigger the job immediately for testing.
+Included since I lost last season purely due to forgetting to make predictions. An APScheduler job runs every 30 minutes and checks whether any race session starts within the next hour. If one does, it queries for game members who have not yet submitted a prediction and sends them a reminder via Resend. There is also an admin endpoint to trigger the job immediately for testing.
+
+TODO: allow reply to email with driver codes to insert prediction into DB.
 
 ---
 
