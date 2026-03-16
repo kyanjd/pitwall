@@ -92,6 +92,8 @@ pitwall/
 
 Authentication uses JWT bearer tokens (HS256) with no refresh token flow — the access token is long-lived and stored in `localStorage`. Passwords are hashed with bcrypt. Login follows the OAuth2 password flow, returning a bearer token used on all subsequent requests.
 
+TODO: password reset functionality.
+
 ---
 
 ## Games
@@ -99,6 +101,8 @@ Authentication uses JWT bearer tokens (HS256) with no refresh token flow — the
 A game is tied to a specific F1 season. The owner creates it and shares a 6-character invite code with friends. Within a game, each player submits one prediction per race: a 10th-place driver and a first-DNF driver. The two picks must be different drivers, and no two players in the same game can select the same driver for the same position — uniqueness is enforced at the database level.
 
 Predictions lock automatically at the official session start time. The game owner can manually override the first-DNF result if the automatic detection from the results data is wrong. Qualifying results are shown when available to aid with predictions, and race results are shown afterwards.
+
+TODO: store prediction time in table.
 
 ---
 
@@ -109,6 +113,7 @@ Race data is sourced from the [Jolpica F1 API](https://github.com/jolpica/jolpic
 Both ingest endpoints are protected by an `X-Admin-Secret` header. In production, they are triggered manually via a GitHub Actions `workflow_dispatch` after each race weekend — no cron schedule, since race times are not fixed.
 
 TODO: schedule on race completion.
+TODO: remove 2nd Arvind Lindblad.
 
 ---
 
@@ -137,7 +142,9 @@ TODO: move from manual Bruno collection running to API test suite.
 ## Deployment
 
 - **Frontend** — deployed on [Vercel](https://vercel.com/), built from `frontend/`
-- **Backend** — deployed on [Render](https://render.com) via the included Dockerfile
+- **Backend** — deployed on [Render](https://render.com), built from `backend/`
 - **Database** — [Supabase](https://supabase.com/) managed PostgreSQL
 
 CORS is locked to the production Vercel domain. Post-race result ingestion is triggered manually via GitHub Actions using secrets for the backend URL and admin key.
+
+TODO: dockerise.
