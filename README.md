@@ -1,5 +1,8 @@
 # Pitwall
 
+> [!NOTE]
+> F1 race rescheduling has caused some issues, WIP
+
 A prediction game for F1 enjoyers, and an upgrade to the manual version I've played for a few seasons.
 
 Each race, every player picks who they think will finish 10th and who will DNF first. Points are awarded based on how close the 10th-place pick was and whether the DNF call was correct. Predictions lock at the official session start time, and each driver pick is first-come-first-serve.
