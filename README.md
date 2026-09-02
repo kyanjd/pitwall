@@ -142,6 +142,56 @@ TODO: move from manual Bruno collection running to API test suite.
 
 ---
 
+## Local development
+
+Local dev runs against a throwaway Postgres in Docker, never the live database — predictions are first-come-first-serve per game at the database level, so a test pick in a real game permanently takes a driver away from a real player.
+
+```bash
+uv sync
+cd frontend && npm install
+```
+
+Two env files. Root `.env` for Compose:
+
+```
+POSTGRES_USER=pitwall
+POSTGRES_PASSWORD=pitwall
+POSTGRES_DB=pitwall
+```
+
+And `backend/.env` for the app:
+
+```
+DATABASE_URL=postgresql+psycopg://pitwall:pitwall@localhost:5432/pitwall
+RESEND_API_KEY=dummy-local-no-sends
+ADMIN_SECRET=local
+SECRET_KEY=<openssl rand -base64 32>
+```
+
+`RESEND_API_KEY` is required by config but should stay junk locally, so sends fail loudly instead of emailing players. `SECRET_KEY` defaults to a fresh random value each start, which silently invalidates every JWT on reload — set it. Production values belong in `backend/.env.prod` (gitignored), used only when deliberately pointing at Supabase.
+
+Bring it up:
+
+```bash
+docker compose up -d
+cd backend && uv run uvicorn app.main:app --port 8000
+cd frontend && npm run dev
+```
+
+First boot creates the tables via `create_all` in the lifespan — there are no migrations to run from empty. Then populate real F1 data:
+
+```bash
+curl -X POST localhost:8000/f1/admin/setup/2026 -H "x-admin-secret: local"
+curl -X POST localhost:8000/f1/admin/ingest/2026/results -H "x-admin-secret: local"
+```
+
+Both are upserts, safe to re-run. Users and games are made by hand through the frontend — register a couple of accounts and share the invite code between them to exercise the pick-uniqueness constraints. `docker compose down -v` wipes and starts over.
+
+TODO: baseline Alembic migration so `alembic upgrade head` works from empty.
+TODO: Makefile as a single entry point.
+
+---
+
 ## Deployment
 
 - **Frontend** — deployed on [Vercel](https://vercel.com/), built from `frontend/`
