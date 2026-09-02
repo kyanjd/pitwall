@@ -58,7 +58,7 @@ class Ingestor:
     def ingest_driver_api(self, driver_data: dict) -> Driver:
         driver_model = Driver(
             external_id=driver_data["driverId"],
-            code=driver_data["code"],
+            code=driver_data.get("code") or driver_data["familyName"][:3].upper(),
             first_name=driver_data["givenName"],
             last_name=driver_data["familyName"],
         )

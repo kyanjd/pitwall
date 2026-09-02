@@ -16,8 +16,6 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
-
 app = FastAPI(title="Pitwall", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
