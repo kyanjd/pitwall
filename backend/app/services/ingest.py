@@ -1,4 +1,6 @@
+import re
 import time
+import unicodedata
 import uuid
 from datetime import datetime
 
@@ -8,6 +10,12 @@ from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
 from app.schema.f1 import F1SessionType
 from app.services.f1 import F1DataClient
 from sqlmodel import Session, select
+
+
+def slugify(value: str) -> str:
+    """e.g. Sao Paulo Grand Prix -> sao_paulo_grand_prix"""
+    ascii_value = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
+    return re.sub(r"[^a-z0-9]+", "_", ascii_value.lower()).strip("_")
 
 
 class Ingestor:
@@ -27,6 +35,8 @@ class Ingestor:
 
     def ingest_race_api(self, race_data: dict, season: int, circuit_id: uuid.UUID) -> Race:
         race_model = Race(
+            # Round is not stable - Jolpica renumbers when races are cancelled or reordered.
+            external_id=f"{season}_{slugify(race_data['raceName'])}",
             name=race_data["raceName"],
             circuit_id=circuit_id,
             round=int(race_data["round"]),

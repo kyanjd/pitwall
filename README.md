@@ -124,6 +124,8 @@ TODO: remove 2nd Arvind Lindblad.
 
 The project started with `SQLModel.metadata.create_all` for convenience during early development, which turned into a database creation/update cli tool. Now that players are actively using it, Alembic handles all schema changes using migrations to avoid data loss.
 
+`create_all` has been removed from the app lifespan — it silently created tables behind Alembic's back, so the two could disagree. `b17192f52c8a` is the baseline: it describes the schema as deployed, and existing databases are marked with `alembic stamp b17192f52c8a` rather than running it.
+
 ---
 
 ## Email reminders
@@ -174,11 +176,14 @@ Bring it up:
 
 ```bash
 docker compose up -d
-cd backend && uv run uvicorn app.main:app --port 8000
+cd backend
+uv run alembic upgrade head
+uv run uvicorn app.main:app --port 8000
+# and in another shell:
 cd frontend && npm run dev
 ```
 
-First boot creates the tables via `create_all` in the lifespan — there are no migrations to run from empty. Then populate real F1 data:
+The app no longer creates tables on boot, so the migration step is required against an empty database. Then populate real F1 data:
 
 ```bash
 curl -X POST localhost:8000/f1/admin/setup/2026 -H "x-admin-secret: local"
@@ -187,7 +192,6 @@ curl -X POST localhost:8000/f1/admin/ingest/2026/results -H "x-admin-secret: loc
 
 Both are upserts, safe to re-run. Users and games are made by hand through the frontend — register a couple of accounts and share the invite code between them to exercise the pick-uniqueness constraints. `docker compose down -v` wipes and starts over.
 
-TODO: baseline Alembic migration so `alembic upgrade head` works from empty.
 TODO: Makefile as a single entry point.
 
 ---

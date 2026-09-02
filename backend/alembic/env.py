@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from app.core.config import settings
 from app.models.f1 import Circuit, Constructor, Driver, F1Session, Race, Result
-from app.models.game import Game
-from app.models.game_user import GameUser
+from app.models.game import Game, GameUser
+from app.models.prediction import Prediction
 from app.models.user import User
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel

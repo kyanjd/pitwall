@@ -22,12 +22,14 @@ def upsert_circuit(*, session: Session, circuit: Circuit) -> Circuit:
 
 
 def upsert_race(*, session: Session, race: Race) -> Race:
-    statement = select(Race).where(Race.season == race.season, Race.round == race.round)
+    statement = select(Race).where(Race.external_id == race.external_id)
     existing_race = session.exec(statement).first()
 
     if existing_race:
         existing_race.name = race.name
         existing_race.circuit_id = race.circuit_id
+        existing_race.round = race.round
+        existing_race.season = race.season
         session.add(existing_race)
         return existing_race
     else:

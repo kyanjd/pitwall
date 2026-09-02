@@ -54,8 +54,8 @@ class F1Session(SQLModel, table=True):
 
 
 class Race(SQLModel, table=True):
-    __table_args__ = (UniqueConstraint("season", "round"),)
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    external_id: str = Field(nullable=False, unique=True, index=True)
     name: str = Field(nullable=False)
     circuit_id: uuid.UUID = Field(foreign_key="circuit.id", nullable=False)
     round: int = Field(nullable=False, index=True)
