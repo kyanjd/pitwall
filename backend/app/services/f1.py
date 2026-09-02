@@ -68,19 +68,13 @@ class F1DataClient:
 
     def all_circuits_in_season(self, season: int) -> list:
         # Allows fetching circuits before races are complete
-        result = self.get(f"{season}.json")
-        race_list = result["MRData"]["RaceTable"]["Races"]
-        return race_list
+        return self.get_all(f"{season}.json")
 
     def all_drivers_in_season(self, season: int) -> list:
-        result = self.get(f"{season}/drivers.json")
-        driver_list = result["MRData"]["DriverTable"]["Drivers"]
-        return driver_list
+        return self.get_all(f"{season}/drivers.json")
 
     def all_constructors_in_season(self, season: int) -> list:
-        result = self.get(f"{season}/constructors.json")
-        constructor_list = result["MRData"]["ConstructorTable"]["Constructors"]
-        return constructor_list
+        return self.get_all(f"{season}/constructors.json")
 
     def all_races_in_season(self, season: int) -> list:
         result_list = self.get_all(f"{season}/results.json")
