@@ -1,8 +1,9 @@
+import typing
 import uuid
 
 
 class Scorer:
-    SCORE_DICT = {
+    SCORE_DICT: typing.ClassVar = {
         0: 25,
         1: 18,
         2: 15,
@@ -25,6 +26,3 @@ class Scorer:
         if actual_driver == predicted_driver:
             return 10
         return 0
-
-    def set_score_dict(self, score_dict: dict):
-        self.SCORE_DICT = score_dict

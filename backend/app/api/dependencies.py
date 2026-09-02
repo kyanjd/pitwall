@@ -27,8 +27,8 @@ def get_current_user(
         user_id: uuid.UUID | None = payload.get("sub")
         if user_id is None:
             raise UnauthorizedError("Invalid token.")
-    except InvalidTokenError:
-        raise UnauthorizedError("Invalid token.")
+    except InvalidTokenError as e:
+        raise UnauthorizedError("Invalid token.") from e
 
     user = crud.user.get_user_by_id(session=session, user_id=user_id)
     if not user:

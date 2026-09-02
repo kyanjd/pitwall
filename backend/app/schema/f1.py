@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class F1SessionType(str, Enum):
+class F1SessionType(StrEnum):
     QUALIFYING = "Qualifying"
     RACE = "Race"
     SPRINT = "Sprint"
