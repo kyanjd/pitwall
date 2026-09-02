@@ -10,13 +10,13 @@ class Result(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     driver_id: uuid.UUID = Field(foreign_key="driver.id", nullable=False)
     f1session_id: uuid.UUID = Field(foreign_key="f1session.id", nullable=False)
-    constructor_id: Optional[uuid.UUID] = Field(foreign_key="constructor.id", nullable=True, default=None)
+    constructor_id: uuid.UUID | None = Field(foreign_key="constructor.id", nullable=True, default=None)
     position: int = Field(nullable=False)
-    position_text: Optional[str] = Field(nullable=True)
-    status: Optional[str] = Field(nullable=True)
-    grid: Optional[str] = Field(nullable=True)
-    laps: Optional[int] = Field(nullable=True)
-    dnf_order: Optional[int] = Field(nullable=True)
+    position_text: str | None = Field(nullable=True)
+    status: str | None = Field(nullable=True)
+    grid: str | None = Field(nullable=True)
+    laps: int | None = Field(nullable=True)
+    dnf_order: int | None = Field(nullable=True)
 
     driver: Optional["Driver"] = Relationship(back_populates="results")
     constructor: Optional["Constructor"] = Relationship(back_populates="results")
@@ -80,9 +80,9 @@ class ResultPublic(SQLModel):
     driver_first_name: str
     driver_last_name: str
     position: int
-    position_text: Optional[str]
-    status: Optional[str]
-    laps: Optional[int]
+    position_text: str | None
+    status: str | None
+    laps: int | None
     is_first_dnf: bool
 
 

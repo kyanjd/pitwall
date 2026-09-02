@@ -45,7 +45,7 @@ scheduler = AsyncIOScheduler()
 
 @scheduler.scheduled_job("interval", minutes=30)
 async def send_prediction_reminders():
-    now = datetime.datetime.now(datetime.timezone.utc)
+    now = datetime.datetime.now(datetime.UTC)
     now_plus_1h = now + datetime.timedelta(hours=1)
 
     with get_session_local() as session:
@@ -76,7 +76,7 @@ async def send_prediction_reminders():
 
             for user in unpredicted_users:
                 try:
-                    response = mailer.send_prediction_reminder(
+                    _ = mailer.send_prediction_reminder(
                         to=user.email,
                         session_name=f"{upcoming_session.race.name}",
                         session_date=upcoming_session.date.strftime("%Y-%m-%d %H:%M UTC"),

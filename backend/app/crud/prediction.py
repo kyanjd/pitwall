@@ -11,7 +11,12 @@ from app.services.score import Scorer
 
 
 def upsert_prediction(
-    *, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, f1session_id: uuid.UUID, prediction_create: PredictionCreate
+    *,
+    session: Session,
+    user_id: uuid.UUID,
+    game_id: uuid.UUID,
+    f1session_id: uuid.UUID,
+    prediction_create: PredictionCreate,
 ) -> Prediction:
     pos_conflict = session.exec(
         select(Prediction).where(
@@ -51,7 +56,9 @@ def upsert_prediction(
         session.refresh(existing_prediction)
         return existing_prediction
     else:
-        db_obj = Prediction.model_validate(prediction_create, update={"user_id": user_id, "game_id": game_id, "f1session_id": f1session_id})
+        db_obj = Prediction.model_validate(
+            prediction_create, update={"user_id": user_id, "game_id": game_id, "f1session_id": f1session_id}
+        )
         session.add(db_obj)
         session.commit()
         session.refresh(db_obj)
@@ -87,9 +94,7 @@ def get_prediction_for_user_and_session(
     return prediction
 
 
-def delete_prediction(
-    *, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, f1session_id: uuid.UUID
-) -> None:
+def delete_prediction(*, session: Session, user_id: uuid.UUID, game_id: uuid.UUID, f1session_id: uuid.UUID) -> None:
     statement = select(Prediction).where(
         Prediction.game_id == game_id,
         Prediction.f1session_id == f1session_id,

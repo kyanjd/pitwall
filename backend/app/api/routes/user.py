@@ -1,5 +1,3 @@
-from typing import Any
-
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser
 from app.core import security
@@ -31,9 +29,7 @@ def update_me(session: CurrentSession, current_user: CurrentUser, user_update: U
 
 
 @router.put("/me/password", status_code=204)
-def change_password(
-    session: CurrentSession, current_user: CurrentUser, password_change: PasswordChange
-) -> Response:
+def change_password(session: CurrentSession, current_user: CurrentUser, password_change: PasswordChange) -> Response:
     if not security.verify_password(password_change.current_password, current_user.hashed_password):
         raise UnauthorizedError("Current password is incorrect.")
     new_hash = security.get_password_hash(password_change.new_password)

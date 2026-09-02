@@ -1,9 +1,7 @@
 import uuid
-from typing import Annotated
 
 from app import crud
 from app.api.dependencies import CurrentSession, CurrentUser, require_admin
-from app.core.config import settings
 from app.models.f1 import Driver, F1SessionPublic, ResultPublic
 from app.schema.f1 import F1SessionType
 from app.services.email import send_prediction_reminders

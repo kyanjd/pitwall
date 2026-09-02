@@ -26,15 +26,30 @@ dependencies = [
 # Path discovery, excludes, etc. (Optional, but good practice)
 line-length = 120
 
+# Alembic's env.py and generated migrations are its own style, not ours.
+exclude = ["migrations", "alembic"]
+
+# Respect the excludes even when a path is passed explicitly (e.g. :Ruff backend/alembic).
+force-exclude = true
+
 [tool.ruff.lint]
 # 1. Select the rules you want active.
 # 'I' = Isort (Import Sorting)
 # 'F' = Pyflakes (Unused variable/import warnings)
 # 'E' = Pycodestyle errors
-select = ["F", "E", "W", "I"]
+# 'UP' = pyupgrade, 'B' = bugbear, 'SIM'/'C4' = simplify/comprehensions, 'RUF' = ruff-specific
+select = ["F", "E", "W", "I", "UP", "B", "SIM", "C4", "RUF"]
 
 # 2. Prevent F401 (Unused Imports) from being fixed/deleted automatically.
 # This keeps the warning visible but forces you to delete the import manually.
 unfixable = ["F401"]
 
-exclude = ["migrations", "alembic"]
+[tool.ruff.lint.per-file-ignores]
+# Model imports register tables on SQLModel.metadata before create_all - unused, but load-bearing.
+"backend/app/db/cli.py" = ["F401"]
+"backend/app/db/session.py" = ["F401"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["backend"]
