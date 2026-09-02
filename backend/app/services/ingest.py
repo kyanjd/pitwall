@@ -187,6 +187,10 @@ class Ingestor:
 
         for driver_data in self.client.all_drivers_in_season(season):
             self.ingest_driver_api(driver_data)
+
+        for constructor_data in self.client.all_constructors_in_season(season):
+            self.ingest_constructor_api(constructor_data)
+
         self.session.commit()
 
     def to_datetime(self, date_str: str, time_str: str) -> datetime:
